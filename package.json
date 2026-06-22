@@ -1,0 +1,30 @@
+{
+  "name": "hyp3rcube3.0n3",
+  "version": "1.0.0",
+  "description": "Hyp3rCub3.0n3 — unblocked games portal",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client",
+    "start": "node server/server.js",
+    "seed": "node server/scripts/seed-games.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "jsonwebtoken": "^9.0.2",
+    "nedb-promises": "^6.2.3",
+    "passport": "^0.7.0",
+    "passport-apple": "^2.0.1",
+    "passport-discord": "^0.1.4",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
