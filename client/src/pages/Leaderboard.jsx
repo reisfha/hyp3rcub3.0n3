@@ -17,14 +17,14 @@ export default function Leaderboard() {
       const g = games.find(g => g.slug === slug);
       if (g) {
         setSelectedGame(g);
-        fetchScores(g._id).then(r => setScores(r.data.scores));
+        fetchScores(slug).then(r => setScores(r.data.scores));
       }
     }
   }, [slug, games]);
 
   const handleSelect = (game) => {
     setSelectedGame(game);
-    fetchScores(game._id).then(r => setScores(r.data.scores));
+    fetchScores(game.slug).then(r => setScores(r.data.scores));
   };
 
   return (
@@ -57,11 +57,11 @@ export default function Leaderboard() {
                   </thead>
                   <tbody>
                     {scores.map((s, i) => (
-                      <tr key={s._id} className={i < 3 ? `lb-top lb-top-${i + 1}` : ''}>
+                      <tr key={i} className={i < 3 ? `lb-top lb-top-${i + 1}` : ''}>
                         <td>{i + 1}</td>
                         <td>{s.username}</td>
-                        <td>{s.value.toLocaleString()}</td>
-                        <td>{new Date(s.createdAt).toLocaleDateString()}</td>
+                        <td>{Number(s.score).toLocaleString()}</td>
+                        <td>{new Date(s.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -67,23 +67,25 @@ export default function GamePage() {
     }
   }, [slug]);
 
+  const gameSlug = slug.startsWith('nebula-') ? null : slug;
+
   useEffect(() => {
-    if (user && game) {
-      fetchRating(game._id).then(r => setUserRating(r.data.score));
+    if (user && gameSlug) {
+      fetchRating(gameSlug).then(r => setUserRating(r.data.score));
     }
-  }, [user, game]);
+  }, [user, gameSlug]);
 
   const handleRate = async (score) => {
-    if (!user) return;
-    await rateGame(game._id, score);
+    if (!user || !gameSlug) return;
+    await rateGame(gameSlug, score);
     setUserRating(score);
-    const updated = await fetchGame(slug);
+    const updated = await fetchGame(gameSlug);
     setGame(updated.data.game);
   };
 
   const handleScoreSubmit = async () => {
-    if (!user || !game || !score) return;
-    await submitScore(game._id, score);
+    if (!user || !gameSlug || !score) return;
+    await submitScore(gameSlug, score);
   };
 
   if (loading) return <div className="page loading">Loading...</div>;

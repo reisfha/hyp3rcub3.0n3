@@ -69,7 +69,7 @@ export default function Admin() {
         <div className="admin-stats">
           <div className="stat-card"><h3>{stats.games}</h3><p>Games</p></div>
           <div className="stat-card"><h3>{stats.users}</h3><p>Users</p></div>
-          <div className="stat-card"><h3>{stats.plays}</h3><p>Total Plays</p></div>
+          <div className="stat-card"><h3>{stats.scores}</h3><p>Score Submissions</p></div>
         </div>
       )}
 

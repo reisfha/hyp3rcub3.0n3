@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const r = await login({ email, password });
-      setUser(r.data.user);
+      setUser(r.data);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');

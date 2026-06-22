@@ -10,7 +10,7 @@ export default function GameCard({ game, onFavoriteToggle }) {
   const handleFav = async (e) => {
     e.preventDefault();
     if (!user) return;
-    await toggleFavorite(game._id);
+    await toggleFavorite(game.slug);
     setFaved(!faved);
     onFavoriteToggle?.();
   };

@@ -1,0 +1,12 @@
+name = "hyp3rcub3-0n3"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "client/dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hyp3rcube"
+database_id = ""
+
+[env.production]
+vars = { JWT_SECRET = "" }

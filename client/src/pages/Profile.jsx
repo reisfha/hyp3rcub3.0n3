@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchGames } from '../api/client';
 import GameCard from '../components/GameCard';
 
 export default function Profile() {
@@ -14,11 +13,11 @@ export default function Profile() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (user?.favorites?.length) {
-      fetchGames({ limit: 200 }).then(r => {
-        const favs = r.data.games.filter(g => user.favorites.includes(g._id));
-        setFavGames(favs);
-      });
+    if (user) {
+      fetch('/api/profile/favorites', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        .then(r => r.json())
+        .then(data => setFavGames(data.games || []))
+        .catch(() => {});
     }
   }, [user]);
 
