@@ -5,13 +5,11 @@ import { useState } from 'react';
 
 function gameFavicon(game) {
   if (game.thumbnail) return game.thumbnail;
-  if (game.embedUrl) {
-    if (game.embedUrl.startsWith('http')) {
+  if (game.embedUrl && game.embedUrl.startsWith('http')) {
+    try {
       const domain = new URL(game.embedUrl).hostname;
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-    }
-    const domain = window.location.hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch {}
   }
   return null;
 }
