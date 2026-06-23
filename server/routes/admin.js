@@ -3,6 +3,7 @@ const Game = require('../models/Game');
 const User = require('../models/User');
 const { isAdmin } = require('../middleware/auth');
 
+const GameRequest = require('../models/GameRequest');
 const router = express.Router();
 
 router.get('/games', isAdmin, async (req, res) => {
@@ -72,6 +73,74 @@ router.put('/users/:id/role', isAdmin, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     const { password, ...rest } = user;
     res.json({ user: rest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/requests', isAdmin, async (req, res) => {
+  try {
+    const requests = await GameRequest.find({}).sort({ createdAt: -1 });
+    res.json({ requests });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/requests/approve', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.body;
+    const reqRow = await GameRequest.findOne({ _id: id });
+    if (!reqRow) return res.status(404).json({ error: 'Request not found' });
+    await GameRequest.update({ _id: id }, { $set: { status: 'approved' } });
+    const existing = await Game.findOne({ embedUrl: reqRow.url });
+    if (!existing) {
+      const slug = reqRow.title
+        ? reqRow.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        : new URL(reqRow.url).hostname.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      await Game.insert({
+        title: reqRow.title || slug,
+        slug,
+        description: reqRow.description || '',
+        category: 'External',
+        tags: [],
+        embedUrl: reqRow.url,
+        featured: false,
+        plays: 0,
+        ratingSum: 0,
+        ratingCount: 0,
+        createdAt: new Date().toISOString()
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/requests/approved', isAdmin, async (req, res) => {
+  try {
+    const approved = await GameRequest.find({ status: 'approved' });
+    res.json({ approvedUrls: approved.map(r => r.url) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/requests/:id', isAdmin, async (req, res) => {
+  try {
+    const { title, description, admin_notes } = req.body;
+    await GameRequest.update({ _id: req.params.id }, { $set: { title, description, admin_notes } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/requests/:id', isAdmin, async (req, res) => {
+  try {
+    await GameRequest.remove({ _id: req.params.id });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

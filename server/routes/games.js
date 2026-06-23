@@ -29,6 +29,22 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/request', isAuthenticated, async (req, res) => {
+  try {
+    const GameRequest = require('../models/GameRequest');
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: 'URL is required' });
+    const request = await GameRequest.insert({
+      url,
+      submittedBy: req.user._id,
+      createdAt: new Date().toISOString()
+    });
+    res.json({ success: true, id: request._id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/featured', async (req, res) => {
   try {
     const games = await Game.find({ featured: true }).sort({ createdAt: -1 }).limit(6);

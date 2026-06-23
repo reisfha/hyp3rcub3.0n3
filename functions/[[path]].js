@@ -267,6 +267,15 @@ export async function onRequest(context) {
       });
     }
 
+    if (path === '/api/games/request' && method === 'POST') {
+      if (!user) return json({ error: 'Not authenticated' }, 401);
+      const { url } = body;
+      if (!url) return json({ error: 'URL is required' }, 400);
+      const id = uid();
+      await db.prepare('INSERT INTO game_requests (id, url, submitted_by, created_at) VALUES (?, ?, ?, ?)').bind(id, url, user.id, new Date().toISOString()).run();
+      return json({ success: true, id });
+    }
+
     if (path === '/api/nebula/categories') {
       const r = await fetch(new URL('/games/games.json', url).toString());
       const catalog = await r.json();
@@ -323,6 +332,36 @@ export async function onRequest(context) {
           return json({ success: true });
         }
       }
+      if (path === '/api/admin/requests' && method === 'GET') {
+        const rows = await db.prepare('SELECT r.*, u.username as submitter_username FROM game_requests r LEFT JOIN users u ON u.id = r.submitted_by ORDER BY r.created_at DESC').all();
+        const approved = await db.prepare("SELECT url FROM game_requests WHERE status = 'approved'").all();
+        const approvedUrls = new Set(approved.results.map(r => r.url));
+        return json({ requests: rows.results, approvedUrls: [...approvedUrls] });
+      }
+      if (path === '/api/admin/requests/approve' && method === 'POST') {
+        const { id } = body;
+        const reqRow = await db.prepare('SELECT * FROM game_requests WHERE id = ?').bind(id).first();
+        if (!reqRow) return json({ error: 'Request not found' }, 404);
+        await db.prepare("UPDATE game_requests SET status = 'approved' WHERE id = ?").bind(id).run();
+        const existing = await db.prepare('SELECT id FROM games WHERE embed_url = ?').bind(reqRow.url).first();
+        if (!existing) {
+          const gameId = uid();
+          const slug = urlToSlug(reqRow.url);
+          await db.prepare("INSERT INTO games (id, title, slug, description, category, tags, embed_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(gameId, reqRow.title || slug, slug, reqRow.description || '', 'External', '[]', reqRow.url, 0).run();
+        }
+        return json({ success: true });
+      }
+      if (path.match(/\/admin\/requests\/[\w-]+$/) && method === 'DELETE') {
+        const reqId = path.split('/').pop();
+        await db.prepare('DELETE FROM game_requests WHERE id = ?').bind(reqId).run();
+        return json({ success: true });
+      }
+      if (path.match(/\/admin\/requests\/[\w-]+$/) && method === 'PUT') {
+        const reqId = path.split('/').pop();
+        const { title, description, admin_notes } = body;
+        await db.prepare('UPDATE game_requests SET title = COALESCE(?, title), description = COALESCE(?, description), admin_notes = COALESCE(?, admin_notes) WHERE id = ?').bind(title || null, description || null, admin_notes || null, reqId).run();
+        return json({ success: true });
+      }
     }
 
     return json({ error: 'Not found' }, 404);
@@ -350,4 +389,13 @@ function formatGame(g) {
     ratingSum: g.rating_sum || 0,
     createdAt: g.created_at
   };
+}
+
+function urlToSlug(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    return host.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  } catch {
+    return url.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
 }

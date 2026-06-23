@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats } from '../api/client';
+import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats, adminFetchRequests, adminApproveRequest, adminDeleteRequest, adminUpdateRequest } from '../api/client';
 
 export default function Admin() {
   const { user, loading } = useAuth();
@@ -10,6 +10,10 @@ export default function Admin() {
   const [games, setGames] = useState([]);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({});
+  const [requests, setRequests] = useState([]);
+  const [approvedUrls, setApprovedUrls] = useState([]);
+  const [editingReq, setEditingReq] = useState(null);
+  const [reqForm, setReqForm] = useState({ title: '', description: '', admin_notes: '' });
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: '', slug: '', description: '', category: '', embedUrl: '', builtIn: false, builtInComponent: '', featured: false });
 
@@ -18,10 +22,12 @@ export default function Admin() {
   }, [user, loading, navigate]);
 
   const load = async () => {
-    const [g, u, s] = await Promise.all([adminFetchGames(), adminFetchUsers(), adminFetchStats()]);
+    const [g, u, s, r] = await Promise.all([adminFetchGames(), adminFetchUsers(), adminFetchStats(), adminFetchRequests()]);
     setGames(g.data.games);
     setUsers(u.data.users);
     setStats(s.data.stats);
+    setRequests(r.data.requests);
+    setApprovedUrls(r.data.approvedUrls || []);
   };
 
   useEffect(() => { if (user?.role === 'admin') load(); }, [user]);
@@ -58,7 +64,7 @@ export default function Admin() {
     <div className="page admin-page">
       <h1>⚙️ Admin Panel</h1>
       <div className="admin-tabs">
-        {['games', 'users', 'stats'].map(t => (
+        {['games', 'users', 'stats', 'requests'].map(t => (
           <button key={t} className={`admin-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
@@ -97,6 +103,48 @@ export default function Admin() {
                   <td className="admin-actions">
                     <button onClick={() => handleEdit(g)}>Edit</button>
                     <button className="btn-danger" onClick={() => handleDelete(g._id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'requests' && (
+        <div className="admin-requests">
+          <div className="admin-form">
+            <h3>Game Requests</h3>
+            <p>Review submitted game URL requests. Approve to auto-add to catalog.</p>
+          </div>
+          <table className="admin-table">
+            <thead><tr><th>URL</th><th>Title</th><th>Submitter</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {requests.map(r => (
+                <tr key={r.id || r._id}>
+                  <td><a href={r.url} target="_blank" rel="noreferrer">{r.url}</a></td>
+                  <td>
+                    {editingReq === (r.id || r._id) ? (
+                      <input value={reqForm.title} onChange={e => setReqForm({...reqForm, title: e.target.value})} />
+                    ) : (
+                      r.title || '-'
+                    )}
+                  </td>
+                  <td>{r.submitter_username || r.submittedBy || '-'}</td>
+                  <td><span className={`request-status status-${r.status}`}>{r.status}</span></td>
+                  <td className="admin-actions">
+                    {r.status !== 'approved' && (
+                      <button onClick={async () => { await adminApproveRequest(r.id || r._id); load(); }}>Approve</button>
+                    )}
+                    {editingReq === (r.id || r._id) ? (
+                      <>
+                        <button onClick={async () => { await adminUpdateRequest(r.id || r._id, reqForm); setEditingReq(null); load(); }}>Save</button>
+                        <button onClick={() => setEditingReq(null)}>Cancel</button>
+                      </>
+                    ) : (
+                      <button onClick={() => { setEditingReq(r.id || r._id); setReqForm({ title: r.title || '', description: r.description || '', admin_notes: r.admin_notes || '' }); }}>Edit</button>
+                    )}
+                    <button className="btn-danger" onClick={async () => { if (confirm('Delete this request?')) { await adminDeleteRequest(r.id || r._id); load(); } }}>Delete</button>
                   </td>
                 </tr>
               ))}

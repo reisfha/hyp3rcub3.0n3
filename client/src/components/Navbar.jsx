@@ -29,6 +29,7 @@ export default function Navbar() {
             <>
               <Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
               <Link to="/leaderboard" onClick={() => setMenuOpen(false)}>Leaderboard</Link>
+              <Link to="/request" onClick={() => setMenuOpen(false)}>Request Game</Link>
               {user.role === 'admin' && <Link to="/admin" onClick={() => setMenuOpen(false)}>Admin</Link>}
               <button className="btn-logout" onClick={handleLogout}>Logout</button>
               <span className="nav-user">{user.username}</span>

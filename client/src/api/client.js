@@ -19,6 +19,7 @@ export const fetchCategories = () => api.get('/games/categories');
 export const fetchGame = (slug) => api.get(`/games/${slug}`);
 export const rateGame = (slug, score) => api.post(`/games/${slug}/rate`, { score });
 export const fetchRating = (slug) => api.get(`/games/${slug}/rating`);
+export const requestGame = (data) => api.post('/games/request', data);
 export const toggleFavorite = (slug) => api.post(`/games/${slug}/favorite`);
 export const fetchScores = (slug) => api.get(`/games/${slug}/scores`);
 export const submitScore = (slug, score) => api.post(`/games/${slug}/score`, { score });
@@ -35,5 +36,9 @@ export const adminFetchUsers = () => api.get('/admin/users');
 export const adminUpdateRole = (id, role) => api.put(`/admin/users/${id}/role`, { role });
 export const adminFetchStats = () => api.get('/admin/stats');
 export const adminDeleteUser = (id) => api.delete(`/admin/users/${id}`);
+export const adminFetchRequests = () => api.get('/admin/requests');
+export const adminApproveRequest = (id) => api.post('/admin/requests/approve', { id });
+export const adminDeleteRequest = (id) => api.delete(`/admin/requests/${id}`);
+export const adminUpdateRequest = (id, data) => api.put(`/admin/requests/${id}`, data);
 
 export default api;

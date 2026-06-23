@@ -49,3 +49,14 @@ CREATE TABLE IF NOT EXISTS favorites (
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(user_id, game_id)
 );
+
+CREATE TABLE IF NOT EXISTS game_requests (
+  id TEXT PRIMARY KEY,
+  url TEXT NOT NULL,
+  title TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  status TEXT DEFAULT 'pending',
+  submitted_by TEXT,
+  admin_notes TEXT DEFAULT '',
+  created_at TEXT DEFAULT (datetime('now'))
+);

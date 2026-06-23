@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import Admin from './pages/Admin';
+import RequestGame from './pages/RequestGame';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/leaderboard/:slug" element={<Leaderboard />} />
+          <Route path="/request" element={<RequestGame />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
