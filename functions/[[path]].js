@@ -342,8 +342,8 @@ export async function onRequest(context) {
         const rows = await db.prepare('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC').all();
         return json({ users: rows.results });
       }
-      if (path.match(/\/admin\/users\/[\w-]+\/role$/)) {
-        const userId = path.split('/')[4];
+      if (path.match(/\/admin\/users\/[\w-]+\/role$/) && method === 'PUT') {
+        const userId = path.split('/')[3];
         const { role } = body;
         if (!['user', 'admin'].includes(role)) return json({ error: 'Invalid role' }, 400);
         await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(role, userId).run();
