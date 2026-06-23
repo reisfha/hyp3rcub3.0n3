@@ -27,6 +27,41 @@ function json(data, status = 200) {
 
 function uid() { return crypto.randomUUID().slice(0, 16); }
 
+const CATEGORY_COLORS = {
+  'Other': '#6c5ce7',
+  'Pokemon': '#ef4444',
+  'Platformer': '#f59e0b',
+  'Mario': '#ef4444',
+  'Sonic': '#3b82f6',
+  'Racing': '#10b981',
+  'Strategy': '#8b5cf6',
+  'Fighting': '#ef4444',
+  'Sports': '#10b981',
+  'Shooter': '#ec4899',
+  'Horror': '#1e293b',
+  'Puzzle': '#f59e0b',
+  'Minecraft': '#22c55e',
+  'Zelda': '#f59e0b',
+  'RPG': '#8b5cf6',
+  'Simulation': '#06b6d4',
+};
+
+function svgThumbnail(title, category) {
+  const color = CATEGORY_COLORS[category] || '#6c5ce7';
+  const initial = (title || '?')[0].toUpperCase();
+  const escaped = (title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">
+    <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${color}"/>
+      <stop offset="100%" stop-color="${color}dd"/>
+    </linearGradient></defs>
+    <rect width="320" height="180" fill="url(#g)" rx="8"/>
+    <text x="160" y="85" text-anchor="middle" dominant-baseline="central" font-family="system-ui" font-size="72" font-weight="bold" fill="rgba(255,255,255,0.15)" letter-spacing="4">${initial}</text>
+    <text x="160" y="140" text-anchor="middle" font-family="system-ui" font-size="13" fill="rgba(255,255,255,0.9)">${escaped}</text>
+  </svg>`;
+  return 'data:image/svg+xml;base64,' + btoa(svg);
+}
+
 function getSlug(path) {
   const parts = path.split('/');
   const idx = parts.indexOf('games');
@@ -273,22 +308,24 @@ export async function onRequest(context) {
       const category = url.searchParams.get('category') || '';
       const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
       const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 100);
-      let games = catalog.games || [];
+      let games = (catalog.games || []).slice(0, 500);
       if (search) { const s = search.toLowerCase(); games = games.filter(g => g.name.toLowerCase().includes(s) || g.tags?.some(t => t.includes(s))); }
       if (category && category !== 'All') { games = games.filter(g => (g.category || 'Other') === category); }
       const total = games.length;
       const start = (page - 1) * limit;
       const paged = games.slice(start, start + limit);
+      const stats = { ...catalog.stats, totalGames: 500 };
       return json({
-        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/' + g.file, thumbnail: '', plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
-        total, page, pages: Math.ceil(total / limit), stats: catalog.stats
+        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
+        total, page, pages: Math.ceil(total / limit), stats
       });
     }
 
     if (path === '/api/nebula/categories') {
       const r = await fetch(new URL('/games/games.json', url).toString());
       const catalog = await r.json();
-      return json({ categories: catalog.categories || [], stats: catalog.stats });
+      const stats = { ...catalog.stats, totalGames: 500 };
+      return json({ categories: catalog.categories || [], stats });
     }
 
     if (path.startsWith('/api/admin')) {

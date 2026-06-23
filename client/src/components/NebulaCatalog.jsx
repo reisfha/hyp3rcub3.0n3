@@ -51,7 +51,7 @@ export default function NebulaCatalog() {
   return (
     <div>
       <div className="catalog-controls" style={{ marginBottom: 16 }}>
-        <SearchBar value={search} onChange={handleSearch} placeholder="Search 2,790 games..." />
+        <SearchBar value={search} onChange={handleSearch} placeholder="Search 500 games..." />
         <select className="sort-select" value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}

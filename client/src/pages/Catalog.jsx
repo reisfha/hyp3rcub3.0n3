@@ -38,7 +38,7 @@ export default function Catalog() {
       <div className="page catalog-page">
         <div className="catalog-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <h1>🌌 NEBULA CDN — 2,790 Games</h1>
+            <h1>🌌 NEBULA CDN — 500 Games</h1>
             <button className="btn-secondary" onClick={() => setShowNebula(false)}>← Back to Main Catalog</button>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function Catalog() {
             <option value="name">A-Z</option>
           </select>
           <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => setShowNebula(true)}>
-            🌌 Browse 2,790+ NEBULA Games
+            🌌 Browse 500 NEBULA Games
           </button>
         </div>
       </div>
