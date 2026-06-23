@@ -360,8 +360,8 @@ export async function onRequest(context) {
         if (!user) return json({ error: 'User not found' }, 404);
         return json({ user });
       }
-      if (path.match(/\/admin\/users\/[\w-]+\/role$/) && method === 'PUT') {
-        const userId = path.split('/')[3];
+      if (path.match(/\/api\/admin\/users\/[\w-]+\/role$/) && method === 'PUT') {
+        const userId = path.split('/')[4];
         const { role } = body;
         if (!['user', 'admin'].includes(role)) return json({ error: 'Invalid role' }, 400);
         await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(role, userId).run();
