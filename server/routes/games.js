@@ -45,6 +45,24 @@ router.post('/request', isAuthenticated, async (req, res) => {
   }
 });
 
+router.post('/report-broken', isAuthenticated, async (req, res) => {
+  try {
+    const BrokenReport = require('../models/BrokenReport');
+    const { game_id, game_title, game_slug, description } = req.body;
+    if (!game_id) return res.status(400).json({ error: 'Game ID is required' });
+    const report = await BrokenReport.insert({
+      game_id, game_title, game_slug,
+      reported_by: req.user._id,
+      description: description || '',
+      resolved: false,
+      createdAt: new Date().toISOString()
+    });
+    res.json({ success: true, id: report._id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/featured', async (req, res) => {
   try {
     const games = await Game.find({ featured: true }).sort({ createdAt: -1 }).limit(6);

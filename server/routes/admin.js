@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { isAdmin } = require('../middleware/auth');
 
 const GameRequest = require('../models/GameRequest');
+const BrokenReport = require('../models/BrokenReport');
 const router = express.Router();
 
 router.get('/games', isAdmin, async (req, res) => {
@@ -153,6 +154,33 @@ router.get('/stats', isAdmin, async (req, res) => {
     const allGames = await Game.find({});
     const totalPlays = allGames.reduce((sum, g) => sum + (g.plays || 0), 0);
     res.json({ stats: { games: gameCount, users: userCount, plays: totalPlays } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/broken-reports', isAdmin, async (req, res) => {
+  try {
+    const reports = await BrokenReport.find({}).sort({ createdAt: -1 });
+    res.json({ reports });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/broken-reports/resolve', isAdmin, async (req, res) => {
+  try {
+    await BrokenReport.update({ _id: req.body.id }, { $set: { resolved: true } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/broken-reports/:id', isAdmin, async (req, res) => {
+  try {
+    await BrokenReport.remove({ _id: req.params.id });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

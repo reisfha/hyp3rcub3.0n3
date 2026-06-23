@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchGame, rateGame, fetchRating, submitScore } from '../api/client';
+import { fetchGame, rateGame, fetchRating, submitScore, reportBroken } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import FullscreenButton from '../components/FullscreenButton';
 
@@ -30,6 +30,15 @@ export default function GamePage() {
   const [userRating, setUserRating] = useState(0);
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [reportSent, setReportSent] = useState(false);
+
+  const handleReport = async () => {
+    if (!user || !game) return;
+    try {
+      await reportBroken({ game_id: game._id || game.id, game_title: game.title, game_slug: slug, description: '' });
+      setReportSent(true);
+    } catch {}
+  };
 
   useEffect(() => {
     if (slug.startsWith('nebula-')) {
@@ -157,6 +166,10 @@ export default function GamePage() {
           {game.tags?.map(t => <span key={t} className="tag">{t}</span>)}
           {isNebula && <span className="tag" style={{ borderColor: 'var(--cyan)', color: 'var(--cyan)' }}>NEBULA CDN</span>}
         </div>
+        {user && !reportSent && (
+          <button className="btn-report" onClick={handleReport} style={{ marginTop: '1rem' }}>Report Broken</button>
+        )}
+        {reportSent && <p className="report-thanks" style={{ marginTop: '1rem' }}>Thanks — we'll check it out.</p>}
       </div>
     </div>
   );

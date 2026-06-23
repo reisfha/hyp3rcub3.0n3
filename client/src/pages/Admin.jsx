@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats, adminFetchRequests, adminApproveRequest, adminDeleteRequest, adminUpdateRequest } from '../api/client';
+import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats, adminFetchRequests, adminApproveRequest, adminDeleteRequest, adminUpdateRequest, adminFetchBrokenReports, adminResolveReport, adminDeleteReport } from '../api/client';
 
 export default function Admin() {
   const { user, loading } = useAuth();
@@ -14,6 +14,7 @@ export default function Admin() {
   const [approvedUrls, setApprovedUrls] = useState([]);
   const [editingReq, setEditingReq] = useState(null);
   const [reqForm, setReqForm] = useState({ title: '', description: '', admin_notes: '' });
+  const [reports, setReports] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: '', slug: '', description: '', category: '', embedUrl: '', builtIn: false, builtInComponent: '', featured: false });
 
@@ -23,11 +24,13 @@ export default function Admin() {
 
   const load = async () => {
     const [g, u, s, r] = await Promise.all([adminFetchGames(), adminFetchUsers(), adminFetchStats(), adminFetchRequests()]);
+    const [br] = await Promise.all([adminFetchBrokenReports()]);
     setGames(g.data.games);
     setUsers(u.data.users);
     setStats(s.data.stats);
     setRequests(r.data.requests);
     setApprovedUrls(r.data.approvedUrls || []);
+    setReports(br.data.reports);
   };
 
   useEffect(() => { if (user?.role === 'admin') load(); }, [user]);
@@ -64,7 +67,7 @@ export default function Admin() {
     <div className="page admin-page">
       <h1>⚙️ Admin Panel</h1>
       <div className="admin-tabs">
-        {['games', 'users', 'stats', 'requests'].map(t => (
+        {['games', 'users', 'stats', 'requests', 'broken'].map(t => (
           <button key={t} className={`admin-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
@@ -145,6 +148,29 @@ export default function Admin() {
                       <button onClick={() => { setEditingReq(r.id || r._id); setReqForm({ title: r.title || '', description: r.description || '', admin_notes: r.admin_notes || '' }); }}>Edit</button>
                     )}
                     <button className="btn-danger" onClick={async () => { if (confirm('Delete this request?')) { await adminDeleteRequest(r.id || r._id); load(); } }}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'broken' && (
+        <div className="admin-broken">
+          <h3>Broken Game Reports</h3>
+          <table className="admin-table">
+            <thead><tr><th>Game</th><th>Reporter</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              {reports.map(r => (
+                <tr key={r.id || r._id}>
+                  <td>{r.game_title}</td>
+                  <td>{r.reporter_username || r.reported_by || '-'}</td>
+                  <td>{r.resolved ? 'Resolved' : 'Pending'}</td>
+                  <td>{r.created_at}</td>
+                  <td className="admin-actions">
+                    {!r.resolved && <button onClick={async () => { await adminResolveReport(r.id || r._id); load(); }}>Resolve</button>}
+                    <button className="btn-danger" onClick={async () => { if (confirm('Delete this report?')) { await adminDeleteReport(r.id || r._id); load(); } }}>Delete</button>
                   </td>
                 </tr>
               ))}

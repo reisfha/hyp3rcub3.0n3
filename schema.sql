@@ -60,3 +60,14 @@ CREATE TABLE IF NOT EXISTS game_requests (
   admin_notes TEXT DEFAULT '',
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS broken_reports (
+  id TEXT PRIMARY KEY,
+  game_id TEXT NOT NULL,
+  game_title TEXT NOT NULL,
+  game_slug TEXT NOT NULL,
+  reported_by TEXT,
+  description TEXT DEFAULT '',
+  resolved INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);

@@ -70,7 +70,7 @@ export async function onRequest(context) {
       { title: 'Pong', slug: 'pong', description: 'Classic two-player paddle battle', category: 'Classic', tags: '["classic","arcade","paddle"]', builtIn: 1, builtInComponent: 'PongGame' },
       { title: 'Space Invaders', slug: 'space-invaders', description: 'Defend Earth from aliens', category: 'Classic', tags: '["classic","arcade","space"]', builtIn: 1, builtInComponent: 'SpaceInvadersGame' },
       { title: 'Minesweeper', slug: 'minesweeper', description: 'Find the mines', category: 'Puzzle', tags: '["puzzle","classic","mines"]', builtIn: 1, builtInComponent: 'MinesweeperGame' },
-      { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades.', category: 'Idle', tags: '["idle","clicker","cookie"]', builtIn: 1, builtInComponent: 'CookieClickerGame' },
+      { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades.', category: 'Idle', tags: '["idle","clicker","cookie"]', embedUrl: 'https://orteil.dashnet.org/cookieclicker/', featured: 1 },
       { title: 'Subway Surfers Barcelona', slug: 'subway-surfers', description: 'Endless runner — dodge trains', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/subwaysurfersbarcelona.html', featured: 1 },
       { title: 'Subway Surfers Miami', slug: 'subway-surfers-miami', description: 'Endless runner — dash through Miami!', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/subwaysurfersmiami.html' },
       { title: 'Temple Run 2', slug: 'temple-run-2', description: 'Escape the temple', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/templerun2.html', featured: 1 },
@@ -166,6 +166,15 @@ export async function onRequest(context) {
       if (!url) return json({ error: 'URL is required' }, 400);
       const id = uid();
       await db.prepare('INSERT INTO game_requests (id, url, submitted_by, created_at) VALUES (?, ?, ?, ?)').bind(id, url, user.id, new Date().toISOString()).run();
+      return json({ success: true, id });
+    }
+
+    if (path === '/api/games/report-broken' && method === 'POST') {
+      if (!user) return json({ error: 'Not authenticated' }, 401);
+      const { game_id, game_title, game_slug, description } = body;
+      if (!game_id) return json({ error: 'Game ID is required' }, 400);
+      const id = uid();
+      await db.prepare('INSERT INTO broken_reports (id, game_id, game_title, game_slug, reported_by, description) VALUES (?, ?, ?, ?, ?, ?)').bind(id, game_id, game_title, game_slug, user.id, description || '').run();
       return json({ success: true, id });
     }
 
@@ -361,6 +370,20 @@ export async function onRequest(context) {
         const reqId = path.split('/').pop();
         const { title, description, admin_notes } = body;
         await db.prepare('UPDATE game_requests SET title = COALESCE(?, title), description = COALESCE(?, description), admin_notes = COALESCE(?, admin_notes) WHERE id = ?').bind(title || null, description || null, admin_notes || null, reqId).run();
+        return json({ success: true });
+      }
+      if (path === '/api/admin/broken-reports' && method === 'GET') {
+        const rows = await db.prepare('SELECT r.*, u.username as reporter_username FROM broken_reports r LEFT JOIN users u ON u.id = r.reported_by ORDER BY r.created_at DESC').all();
+        return json({ reports: rows.results });
+      }
+      if (path === '/api/admin/broken-reports/resolve' && method === 'POST') {
+        const { id } = body;
+        await db.prepare('UPDATE broken_reports SET resolved = 1 WHERE id = ?').bind(id).run();
+        return json({ success: true });
+      }
+      if (path.match(/\/admin\/broken-reports\/[\w-]+$/) && method === 'DELETE') {
+        const reportId = path.split('/').pop();
+        await db.prepare('DELETE FROM broken_reports WHERE id = ?').bind(reportId).run();
         return json({ success: true });
       }
     }
