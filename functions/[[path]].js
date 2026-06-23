@@ -265,8 +265,9 @@ export async function onRequest(context) {
       return json({ categories: catalog.categories || [], stats: catalog.stats });
     }
 
+    // SPA fallback: non-API routes → serve static assets + _redirects
     if (!path.startsWith('/api/')) {
-      return; // let Cloudflare serve static assets + _redirects
+      return context.env.ASSETS.fetch(request);
     }
 
     if (path.startsWith('/api/admin')) {
