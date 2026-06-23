@@ -5,11 +5,16 @@ import { useState } from 'react';
 
 function gameFavicon(game) {
   if (game.thumbnail) return game.thumbnail;
-  if (game.embedUrl && game.embedUrl.startsWith('http')) {
-    try {
-      const domain = new URL(game.embedUrl).hostname;
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-    } catch {}
+  if (game.embedUrl) {
+    if (game.embedUrl.startsWith('http')) {
+      try {
+        const domain = new URL(game.embedUrl).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+      } catch {}
+    } else {
+      const fullUrl = `${window.location.origin}${game.embedUrl}`;
+      return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(fullUrl)}&size=64`;
+    }
   }
   return null;
 }
