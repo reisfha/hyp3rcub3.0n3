@@ -346,8 +346,9 @@ export async function onRequest(context) {
         const existing = await db.prepare('SELECT id FROM games WHERE embed_url = ?').bind(reqRow.url).first();
         if (!existing) {
           const gameId = uid();
-          const slug = urlToSlug(reqRow.url);
-          await db.prepare("INSERT INTO games (id, title, slug, description, category, tags, embed_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(gameId, reqRow.title || slug, slug, reqRow.description || '', 'External', '[]', reqRow.url, 0).run();
+          let title = reqRow.title || await fetchPageTitle(reqRow.url) || urlToSlug(reqRow.url);
+          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          await db.prepare("INSERT INTO games (id, title, slug, description, category, tags, embed_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(gameId, title, slug, reqRow.description || '', 'External', '[]', reqRow.url, 0).run();
         }
         return json({ success: true });
       }
@@ -389,6 +390,17 @@ function formatGame(g) {
     ratingSum: g.rating_sum || 0,
     createdAt: g.created_at
   };
+}
+
+async function fetchPageTitle(url) {
+  try {
+    const res = await fetch(url);
+    const html = await res.text();
+    const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    return m ? m[1].trim() : null;
+  } catch {
+    return null;
+  }
 }
 
 function urlToSlug(url) {
