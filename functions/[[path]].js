@@ -152,6 +152,14 @@ export async function onRequest(context) {
       return json({ games: rows.results.map(formatGame), total, page, pages: Math.ceil(total / limit) });
     }
 
+    if (!path.startsWith('/api/')) {
+      const response = await context.env.ASSETS.fetch(request);
+      if (response.status === 404) {
+        return context.env.ASSETS.fetch(new URL('/index.html', url));
+      }
+      return response;
+    }
+
     const gameSlug = getSlug(path);
     if (gameSlug) {
       const slug = gameSlug;
@@ -263,11 +271,6 @@ export async function onRequest(context) {
       const r = await fetch(new URL('/games/games.json', url).toString());
       const catalog = await r.json();
       return json({ categories: catalog.categories || [], stats: catalog.stats });
-    }
-
-    // SPA fallback: non-API routes → serve static assets + _redirects
-    if (!path.startsWith('/api/')) {
-      return context.env.ASSETS.fetch(request);
     }
 
     if (path.startsWith('/api/admin')) {
