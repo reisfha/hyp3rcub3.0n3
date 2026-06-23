@@ -37,7 +37,7 @@ Auto-Opens at `http://localhost:8080` — the UI loads but API features (login, 
 ## Full development setup
 
 ```sh
-npm install && npm run dev  
+npm install && npm run dev
 ```
 
 Runs Express backend on `:3001` and Vite dev server on `:5173` with hot reload.
