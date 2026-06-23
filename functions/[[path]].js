@@ -111,12 +111,12 @@ export async function onRequest(context) {
     }
 
     if (path === '/api/auth/login' && method === 'POST') {
-      const { email, password } = body;
-      const row = await db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
+      const { username, password } = body;
+      const row = await db.prepare('SELECT * FROM users WHERE username = ?').bind(username).first();
       if (!row) return json({ error: 'Invalid credentials' }, 401);
       const enc = new TextEncoder();
       const key = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-      const hash = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(email)))));
+      const hash = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(row.email)))));
       if (hash !== row.password_hash) return json({ error: 'Invalid credentials' }, 401);
       const jwt = await signJWT({ id: row.id, username: row.username, email: row.email, role: row.role });
       return json({ token: jwt, user: { id: row.id, username: row.username, email: row.email, role: row.role } });

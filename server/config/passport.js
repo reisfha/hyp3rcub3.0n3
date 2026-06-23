@@ -14,11 +14,11 @@ passport.deserializeUser(async (id, done) => {
 });
 
 passport.use(new LocalStrategy({
-  usernameField: 'email'
-}, async (email, password, done) => {
+  usernameField: 'username'
+}, async (username, password, done) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user) return done(null, false, { message: 'No account with that email' });
+    const user = await User.findOne({ username });
+    if (!user) return done(null, false, { message: 'No account with that username' });
     if (!user.password) return done(null, false, { message: 'Account uses social login' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return done(null, false, { message: 'Wrong password' });

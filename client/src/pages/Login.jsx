@@ -4,7 +4,7 @@ import { login } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { setUser } = useAuth();
@@ -13,7 +13,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const r = await login({ email, password });
+      const r = await login({ username, password });
       setUser(r.data);
       navigate('/');
     } catch (err) {
@@ -27,7 +27,7 @@ export default function Login() {
         <h1>Login</h1>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
           <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
           <button type="submit" className="btn-primary">Login</button>
         </form>
