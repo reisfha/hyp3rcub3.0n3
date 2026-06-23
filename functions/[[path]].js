@@ -160,6 +160,15 @@ export async function onRequest(context) {
       return response;
     }
 
+    if (path === '/api/games/request' && method === 'POST') {
+      if (!user) return json({ error: 'Not authenticated' }, 401);
+      const { url } = body;
+      if (!url) return json({ error: 'URL is required' }, 400);
+      const id = uid();
+      await db.prepare('INSERT INTO game_requests (id, url, submitted_by, created_at) VALUES (?, ?, ?, ?)').bind(id, url, user.id, new Date().toISOString()).run();
+      return json({ success: true, id });
+    }
+
     const gameSlug = getSlug(path);
     if (gameSlug) {
       const slug = gameSlug;
@@ -265,15 +274,6 @@ export async function onRequest(context) {
         games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/' + g.file, thumbnail: '', plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
         total, page, pages: Math.ceil(total / limit), stats: catalog.stats
       });
-    }
-
-    if (path === '/api/games/request' && method === 'POST') {
-      if (!user) return json({ error: 'Not authenticated' }, 401);
-      const { url } = body;
-      if (!url) return json({ error: 'URL is required' }, 400);
-      const id = uid();
-      await db.prepare('INSERT INTO game_requests (id, url, submitted_by, created_at) VALUES (?, ?, ?, ?)').bind(id, url, user.id, new Date().toISOString()).run();
-      return json({ success: true, id });
     }
 
     if (path === '/api/nebula/categories') {
