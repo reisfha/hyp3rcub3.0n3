@@ -120,7 +120,7 @@ export default function GamePage() {
             src={game.embedUrl}
             className="game-iframe"
             allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-fullscreen"
             title={game.title}
           />
         )}
