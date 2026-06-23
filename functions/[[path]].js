@@ -342,6 +342,13 @@ export async function onRequest(context) {
         const rows = await db.prepare('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC').all();
         return json({ users: rows.results });
       }
+      if (path === '/api/admin/promote-by-username' && method === 'POST') {
+        const { username } = body;
+        const user = await db.prepare('SELECT id FROM users WHERE username = ?').bind(username).first();
+        if (!user) return json({ error: 'User not found' }, 404);
+        await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind('admin', user.id).run();
+        return json({ success: true, userId: user.id, message: `${username} promoted to admin` });
+      }
       if (path.match(/\/admin\/users\/[\w-]+\/role$/) && method === 'PUT') {
         const userId = path.split('/')[3];
         const { role } = body;
