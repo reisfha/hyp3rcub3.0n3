@@ -131,6 +131,11 @@ export async function onRequest(context) {
       return json({ status: 'ok', user: user ? user.username : null });
     }
 
+    if (path === '/api/debug/all-users') {
+      const rows = await db.prepare('SELECT id, username, role, email FROM users ORDER BY username ASC').all();
+      return json({ users: rows.results || [] });
+    }
+
     if (path === '/api/auth/register' && method === 'POST') {
       const { username, email, password } = body;
       if (!username || !email || !password || password.length < 6) return json({ error: 'Invalid input' }, 400);
