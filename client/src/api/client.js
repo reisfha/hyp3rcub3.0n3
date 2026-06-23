@@ -37,6 +37,7 @@ export const adminFetchUsers = () => api.get('/admin/users');
 export const adminUpdateRole = (id, role) => api.put(`/admin/users/${id}/role`, { role });
 export const adminFetchStats = () => api.get('/admin/stats');
 export const adminDeleteUser = (id) => api.delete(`/admin/users/${id}`);
+export const adminUpdateSlug = (id, slug) => api.post('/admin/games/slug', { id, slug });
 export const adminFetchRequests = () => api.get('/admin/requests');
 export const adminApproveRequest = (id) => api.post('/admin/requests/approve', { id });
 export const adminDeleteRequest = (id) => api.delete(`/admin/requests/${id}`);

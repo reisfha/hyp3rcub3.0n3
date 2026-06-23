@@ -19,8 +19,9 @@ router.get('/games', isAdmin, async (req, res) => {
 router.post('/games', isAdmin, async (req, res) => {
   try {
     const { title, slug, description, category, tags, embedUrl, builtIn, builtInComponent, thumbnail, instructions, featured } = req.body;
+    const cleanSlug = (slug || title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const game = await Game.insert({
-      title, slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      title, slug: cleanSlug,
       description, category, tags: tags || [],
       embedUrl, builtIn: !!builtIn, builtInComponent: builtInComponent || '',
       thumbnail: thumbnail || '', instructions: instructions || '',
@@ -49,6 +50,17 @@ router.delete('/games/:id', isAdmin, async (req, res) => {
   try {
     await Game.remove({ _id: req.params.id });
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/games/slug', isAdmin, async (req, res) => {
+  try {
+    const { id, slug } = req.body;
+    const clean = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    await Game.update({ _id: id }, { $set: { slug: clean } });
+    res.json({ success: true, slug: clean });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

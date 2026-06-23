@@ -489,3 +489,8 @@ a:hover { text-shadow: var(--glow-cyan); }
 
 /* === Selection === */
 ::selection { background: var(--magenta); color: #fff; }
+
+/* === Report Broken === */
+.btn-report { background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+.btn-report:hover { border-color: var(--magenta); color: var(--magenta); }
+.report-thanks { color: var(--cyan); font-size: 0.85rem; }

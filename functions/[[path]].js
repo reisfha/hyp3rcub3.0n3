@@ -299,7 +299,7 @@ export async function onRequest(context) {
           db.prepare('SELECT COUNT(*) as c FROM users').first(),
           db.prepare('SELECT COUNT(*) as c FROM scores').first(),
         ]);
-        return json({ games: games.c, users: users.c, scores: scores.c });
+        return json({ stats: { games: games.c, users: users.c, scores: scores.c } });
       }
       if (path === '/api/admin/users') {
         const rows = await db.prepare('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC').all();
@@ -326,7 +326,7 @@ export async function onRequest(context) {
       if (path === '/api/admin/games' && method === 'POST') {
         const g = body;
         const id = uid();
-        await db.prepare('INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, g.title, g.slug || g.title.toLowerCase().replace(/\s+/g, '-'), g.description, g.category, JSON.stringify(g.tags || []), g.embedUrl || '', g.builtIn ? 1 : 0, g.builtInComponent || '', g.featured ? 1 : 0).run();
+        await db.prepare('INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, g.title, (g.slug || g.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''), g.description, g.category, JSON.stringify(g.tags || []), g.embedUrl || '', g.builtIn ? 1 : 0, g.builtInComponent || '', g.featured ? 1 : 0).run();
         return json({ game: { ...g, _id: id } });
       }
       if (path.match(/\/admin\/games\/[\w-]+$/)) {
@@ -340,6 +340,12 @@ export async function onRequest(context) {
           await db.prepare('DELETE FROM games WHERE id = ?').bind(gameId).run();
           return json({ success: true });
         }
+      }
+      if (path === '/api/admin/games/slug' && method === 'POST') {
+        const { id, slug } = body;
+        const clean = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        await db.prepare('UPDATE games SET slug = ? WHERE id = ?').bind(clean, id).run();
+        return json({ success: true, slug: clean });
       }
       if (path === '/api/admin/requests' && method === 'GET') {
         const rows = await db.prepare('SELECT r.*, u.username as submitter_username FROM game_requests r LEFT JOIN users u ON u.id = r.submitted_by ORDER BY r.created_at DESC').all();

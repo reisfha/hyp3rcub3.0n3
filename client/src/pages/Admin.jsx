@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats, adminFetchRequests, adminApproveRequest, adminDeleteRequest, adminUpdateRequest, adminFetchBrokenReports, adminResolveReport, adminDeleteReport } from '../api/client';
+import { adminFetchGames, adminCreateGame, adminUpdateGame, adminDeleteGame, adminFetchUsers, adminUpdateRole, adminFetchStats, adminFetchRequests, adminApproveRequest, adminDeleteRequest, adminUpdateRequest, adminFetchBrokenReports, adminResolveReport, adminDeleteReport, adminUpdateSlug } from '../api/client';
 
 export default function Admin() {
   const { user, loading } = useAuth();
