@@ -3,9 +3,23 @@ import { useAuth } from '../context/AuthContext';
 import { toggleFavorite } from '../api/client';
 import { useState } from 'react';
 
+function gameFavicon(game) {
+  if (game.thumbnail) return game.thumbnail;
+  if (game.embedUrl) {
+    if (game.embedUrl.startsWith('http')) {
+      const domain = new URL(game.embedUrl).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    }
+    const domain = window.location.hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  }
+  return null;
+}
+
 export default function GameCard({ game, onFavoriteToggle }) {
   const { user } = useAuth();
   const [faved, setFaved] = useState(user?.favorites?.includes(game._id));
+  const favicon = gameFavicon(game);
 
   const handleFav = async (e) => {
     e.preventDefault();
@@ -18,7 +32,9 @@ export default function GameCard({ game, onFavoriteToggle }) {
   return (
     <Link to={`/game/${game.slug}`} className="game-card">
       <div className="game-card-thumb">
-        {game.thumbnail ? (
+        {favicon ? (
+          <img src={favicon} alt={game.title} className="game-card-favicon" />
+        ) : game.thumbnail ? (
           <img src={game.thumbnail} alt={game.title} />
         ) : (
           <div className="game-card-placeholder">
