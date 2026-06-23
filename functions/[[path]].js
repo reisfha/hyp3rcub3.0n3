@@ -265,6 +265,10 @@ export async function onRequest(context) {
       return json({ categories: catalog.categories || [], stats: catalog.stats });
     }
 
+    if (!path.startsWith('/api/')) {
+      return; // let Cloudflare serve static assets + _redirects
+    }
+
     if (path.startsWith('/api/admin')) {
       if (!user || user.role !== 'admin') return json({ error: 'Unauthorized' }, 403);
       if (path === '/api/admin/stats') {
