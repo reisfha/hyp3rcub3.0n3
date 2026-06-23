@@ -6,7 +6,12 @@ pages_build_output_dir = "client/dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "hyp3rcube"
-database_id = ""
+database_id = "d8412166-8d72-4224-8c46-497cb5d5e410"
 
 [env.production]
-vars = { JWT_SECRET = "" }
+vars = { JWT_SECRET = "hyp3rcube-jwt-secret-production-2026" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "hyp3rcube"
+database_id = "d8412166-8d72-4224-8c46-497cb5d5e410"
