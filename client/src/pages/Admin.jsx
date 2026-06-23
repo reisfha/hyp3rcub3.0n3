@@ -58,10 +58,12 @@ export default function Admin() {
     load();
   };
 
-  const handleRole = async (id, role) => {
-    await adminUpdateRole(id, role);
-    load();
-  };
+   const handleRole = async (id, role) => {
+     const action = role === 'admin' ? 'promote to Admin' : 'demote to User';
+     if (!confirm(`Are you sure you want to ${action}?`)) return;
+     await adminUpdateRole(id, role);
+     load();
+   };
 
   return (
     <div className="page admin-page">
@@ -179,26 +181,26 @@ export default function Admin() {
         </div>
       )}
 
-      {tab === 'users' && (
-        <table className="admin-table">
-          <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
-          <tbody>
-            {users.map(u => (
-              <tr key={u._id}>
-                <td>{u.username}</td><td>{u.email}</td>
-                <td><span className={`profile-role role-${u.role}`}>{u.role}</span></td>
-                <td>
-                  {u.role === 'admin' ? (
-                    <button onClick={() => handleRole(u._id, 'user')}>Demote</button>
-                  ) : (
-                    <button onClick={() => handleRole(u._id, 'admin')}>Promote</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+       {tab === 'users' && (
+         <table className="admin-table">
+           <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+           <tbody>
+             {users.map(u => (
+               <tr key={u._id}>
+                 <td>{u.username}</td><td>{u.email}</td>
+                 <td><span className={`profile-role role-${u.role}`}>{u.role}</span></td>
+                 <td className="admin-actions">
+                   {u.role === 'admin' ? (
+                     <button className="btn-role-toggle" onClick={() => handleRole(u._id, 'user')}>Demote</button>
+                   ) : (
+                     <button className="btn-role-toggle" onClick={() => handleRole(u._id, 'admin')}>Promote</button>
+                   )}
+                 </td>
+               </tr>
+             ))}
+           </tbody>
+         </table>
+       )}
     </div>
   );
 }

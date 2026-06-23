@@ -391,12 +391,18 @@ a:hover { text-shadow: var(--glow-cyan); }
 .admin-table { width: 100%; border-collapse: collapse; }
 .admin-table th, .admin-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
 .admin-table th { font-family: var(--font-display); font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
-.admin-actions { display: flex; gap: 6px; }
+.admin-actions { display: flex; gap: 6px; align-items: center; }
 .admin-actions button, .btn-danger {
   padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
   background: transparent; color: var(--text); cursor: pointer; font-size: 12px;
 }
 .admin-actions button:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn-role-toggle {
+  padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--cyan); color: #000; background: var(--cyan);
+  cursor: pointer; transition: all 0.3s;
+}
+.btn-role-toggle:hover { box-shadow: var(--glow-cyan); }
 .btn-danger { border-color: var(--magenta); color: var(--magenta); }
 .btn-danger:hover { background: var(--magenta); color: #fff; }
 
