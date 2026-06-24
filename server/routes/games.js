@@ -9,10 +9,25 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const { search, category, sort, page = 1, limit = 30 } = req.query;
+    const { search, category, sort, tags, page = 1, limit = 30 } = req.query;
     const query = {};
-    if (search) query.title = { $regex: new RegExp(search, 'i') };
+    
+    // Search in title and tags
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { title: searchRegex },
+        { tags: searchRegex }
+      ];
+    }
+    
     if (category) query.category = category;
+    
+    // Filter by specific tags if provided
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : [tags];
+      query.tags = { $in: tagArray };
+    }
 
     let sortObj = { createdAt: -1 };
     if (sort === 'popular') sortObj = { plays: -1 };
@@ -77,6 +92,22 @@ router.get('/categories', async (req, res) => {
     const all = await Game.find({});
     const cats = [...new Set(all.map(g => g.category).filter(Boolean))];
     res.json({ categories: cats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/tags/available', async (req, res) => {
+  try {
+    const all = await Game.find({});
+    const tagsSet = new Set();
+    all.forEach(g => {
+      if (Array.isArray(g.tags)) {
+        g.tags.forEach(tag => tagsSet.add(tag));
+      }
+    });
+    const tags = Array.from(tagsSet).sort();
+    res.json({ tags });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

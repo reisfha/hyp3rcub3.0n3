@@ -502,3 +502,28 @@ a:hover { text-shadow: var(--glow-cyan); }
 .btn-report { background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
 .btn-report:hover { border-color: var(--magenta); color: var(--magenta); }
 .report-thanks { color: var(--cyan); font-size: 0.85rem; }
+
+/* === Tag Filter === */
+.tag-filter {
+  margin-top: 16px; padding: 12px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.tag-filter-label {
+  display: block; font-weight: 600; margin-bottom: 8px;
+  color: var(--text); font-size: 14px;
+}
+.tag-filter-list {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.tag-filter-btn {
+  padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-dim); cursor: pointer;
+  font-family: var(--font-body); font-size: 13px; transition: all 0.2s;
+}
+.tag-filter-btn:hover {
+  border-color: var(--purple); color: var(--purple);
+}
+.tag-filter-btn.active {
+  background: var(--purple); color: #fff; border-color: var(--purple);
+  box-shadow: 0 0 8px rgba(153, 68, 255, 0.4);
+}

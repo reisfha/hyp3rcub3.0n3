@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchGames, fetchCategories } from '../api/client';
+import { fetchGames, fetchCategories, fetchAvailableTags } from '../api/client';
 import GameCard from '../components/GameCard';
 import SearchBar from '../components/SearchBar';
 import CategoryFilter from '../components/CategoryFilter';
@@ -8,28 +8,40 @@ import NebulaCatalog from '../components/NebulaCatalog';
 export default function Catalog() {
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showNebula, setShowNebula] = useState(false);
 
-  useEffect(() => { fetchCategories().then(r => setCategories(r.data.categories)); }, []);
+  useEffect(() => { 
+    fetchCategories().then(r => setCategories(r.data.categories));
+    fetchAvailableTags().then(r => setAvailableTags(r.data.tags));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
-    fetchGames({ search, category, sort, page, limit: 30 })
+    fetchGames({ search, category, sort, tags: selectedTags.length > 0 ? selectedTags : undefined, page, limit: 30 })
       .then(r => {
         setGames(r.data.games);
         setTotalPages(r.data.pages);
       })
       .finally(() => setLoading(false));
-  }, [search, category, sort, page]);
+  }, [search, category, selectedTags, sort, page]);
 
   const handleSearch = (val) => {
     setSearch(val);
+    setPage(1);
+  };
+
+  const toggleTag = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
     setPage(1);
   };
 
@@ -64,6 +76,33 @@ export default function Catalog() {
             🌌 Browse 500 NEBULA Games
           </button>
         </div>
+        
+        {/* Tag Filter */}
+        {availableTags.length > 0 && (
+          <div className="tag-filter">
+            <div className="tag-filter-label">Filter by Tags:</div>
+            <div className="tag-filter-list">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  className={`tag-filter-btn ${selectedTags.includes(tag) ? 'active' : ''}`}
+                  onClick={() => toggleTag(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <button 
+                className="btn-secondary" 
+                onClick={() => { setSelectedTags([]); setPage(1); }}
+                style={{ marginTop: 8 }}
+              >
+                Clear Tags
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (

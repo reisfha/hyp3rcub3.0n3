@@ -16,6 +16,7 @@ api.interceptors.response.use(r => r, err => {
 export const fetchGames = (params) => api.get('/games', { params });
 export const fetchFeatured = () => api.get('/games/featured');
 export const fetchCategories = () => api.get('/games/categories');
+export const fetchAvailableTags = () => api.get('/games/tags/available');
 export const fetchGame = (slug) => api.get(`/games/${slug}`);
 export const rateGame = (slug, score) => api.post(`/games/${slug}/rate`, { score });
 export const fetchRating = (slug) => api.get(`/games/${slug}/rating`);
