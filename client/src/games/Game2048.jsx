@@ -5,22 +5,37 @@ const addTile = (b) => {
   const zeros = [];
   for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!b[r][c]) zeros.push([r, c]);
   if (!zeros.length) return b;
+  const board = b.map(r => [...r]);
   const [r, c] = zeros[Math.floor(Math.random() * zeros.length)];
-  b[r][c] = Math.random() < 0.9 ? 2 : 4;
-  return b;
+  board[r][c] = Math.random() < 0.9 ? 2 : 4;
+  return board;
 };
 
 const slide = (row) => {
   let arr = row.filter(v => v);
   let score = 0;
   for (let i = 0; i < arr.length - 1; i++) {
-    if (arr[i] === arr[i + 1]) { arr[i] *= 2; score += arr[i]; arr.splice(i + 1, 1); }
+    if (arr[i] === arr[i + 1]) { 
+      arr[i] *= 2; 
+      score += arr[i]; 
+      arr.splice(i + 1, 1);
+      i++; // Skip the next tile since it was merged
+    }
   }
   while (arr.length < 4) arr.push(0);
   return { arr, score };
 };
 
-const rotate = (b) => b[0].map((_, i) => b.map(r => r[i]).reverse());
+const rotate = (b) => {
+  const rotated = [];
+  for (let i = 0; i < 4; i++) {
+    rotated[i] = [];
+    for (let j = 0; j < 4; j++) {
+      rotated[i][j] = b[3 - j][i];
+    }
+  }
+  return rotated;
+};
 const move = (b, d) => {
   let board = b.map(r => [...r]);
   for (let i = 0; i < d; i++) board = rotate(board);
