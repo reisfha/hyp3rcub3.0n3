@@ -691,7 +691,7 @@ a:hover { text-shadow: var(--glow-cyan); }
 /* === 404 Not Found Page === */
 .not-found-page {
   display: flex; align-items: center; justify-content: center;
-  min-height: calc(100vh - 70px); padding: 20px;
+  min-height: 100%; padding: 20px;
   background: var(--bg-primary);
 }
 

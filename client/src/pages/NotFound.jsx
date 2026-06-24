@@ -1,6 +1,6 @@
 export default function NotFound() {
   return (
-    <div className="not-found-page">
+    <div className="page not-found-page">
       <div className="not-found-container">
         <div className="not-found-gif">
           <img 
