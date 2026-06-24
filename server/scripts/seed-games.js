@@ -16,7 +16,8 @@ const games = [
   { title: 'Pong', slug: 'pong', description: 'Classic two-player paddle battle', category: 'Classic', tags: ['classic', 'arcade', 'paddle', 'multiplayer'], builtIn: true, builtInComponent: 'PongGame' },
   { title: 'Space Invaders', slug: 'space-invaders', description: 'Defend Earth from alien invaders', category: 'Classic', tags: ['classic', 'arcade', 'space', 'shooter'], builtIn: true, builtInComponent: 'SpaceInvadersGame' },
   { title: 'Minesweeper', slug: 'minesweeper', description: 'Find the mines without blowing up', category: 'Puzzle', tags: ['puzzle', 'classic', 'mines'], builtIn: true, builtInComponent: 'MinesweeperGame' },
-  { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades. Get rich.', category: 'Idle', tags: ['idle', 'clicker', 'cookie'], builtIn: true, builtInComponent: 'CookieClickerGame' },
+   { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades. Get rich.', category: 'Idle', tags: ['idle', 'clicker', 'cookie'], builtIn: true, builtInComponent: 'CookieClickerGame' },
+   { title: 'Retro Emulator', slug: 'retro-emulator', description: 'Play classic games from NES, SNES, GameBoy, GBA, and N64 by loading ROM files', category: 'Emulation', tags: ['emulator', 'retro', 'classic', 'nes', 'snes', 'gameboy'], builtIn: true, builtInComponent: 'EmulatorGame', featured: true },
 
   /* === Embed from NEBULA CDN (jsdelivr) === */
   { title: 'Subway Surfers Barcelona', slug: 'subway-surfers', description: 'Endless runner — dodge trains through Barcelona', category: 'Endless Runner', tags: ['runner', '3d', 'popular'], embedUrl: `${CDN}/games/subwaysurfersbarcelona.html`, featured: true },

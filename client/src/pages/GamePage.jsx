@@ -16,11 +16,12 @@ import PongGame from '../games/PongGame';
 import SpaceInvadersGame from '../games/SpaceInvadersGame';
 import MinesweeperGame from '../games/MinesweeperGame';
 import CookieClickerGame from '../games/CookieClickerGame';
+import EmulatorGame from '../games/EmulatorGame';
 
 const builtInGames = {
   Game2048, SnakeGame, BreakoutGame, TetrisGame, FlappyBirdGame,
   PacmanGame, DinoGame, AsteroidsGame, PongGame, SpaceInvadersGame,
-  MinesweeperGame, CookieClickerGame
+  MinesweeperGame, CookieClickerGame, EmulatorGame
 };
 
 export default function GamePage() {

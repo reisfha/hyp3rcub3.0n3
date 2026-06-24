@@ -527,3 +527,163 @@ a:hover { text-shadow: var(--glow-cyan); }
   background: var(--purple); color: #fff; border-color: var(--purple);
   box-shadow: 0 0 8px rgba(153, 68, 255, 0.4);
 }
+
+/* === Emulator Game === */
+.emulator-container {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 20px; background: var(--bg-primary);
+}
+
+.emulator-header {
+  text-align: center;
+}
+
+.emulator-header h2 {
+  font-family: var(--font-display); font-size: 24px; margin-bottom: 8px;
+  color: var(--cyan); text-shadow: var(--glow-cyan);
+}
+
+.emulator-subtitle {
+  color: var(--text-dim); font-size: 14px;
+}
+
+.emulator-controls {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+
+.emulator-display {
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.emulator-info {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
+}
+
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13px;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: var(--text-dim); font-weight: 600;
+}
+
+.info-value {
+  color: var(--cyan); font-family: monospace;
+}
+
+.emulator-canvas-wrapper {
+  position: relative; width: 100%; aspect-ratio: 4/3;
+  background: var(--bg-card); border: 2px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+
+.emulator-canvas {
+  width: 100%; height: 100%; display: block;
+}
+
+.emulator-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(26,26,46,0.8), rgba(42,26,62,0.8));
+  border: 1px dashed rgba(0,240,255,0.3);
+}
+
+.placeholder-text {
+  text-align: center; color: var(--text-dim);
+}
+
+.emulator-instructions {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px;
+}
+
+.emulator-instructions h3 {
+  font-family: var(--font-display); margin-bottom: 12px;
+  color: var(--magenta); font-size: 14px;
+}
+
+.controls-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.control-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px; background: rgba(153,68,255,0.1);
+  border: 1px solid var(--purple); border-radius: 6px;
+  text-align: center;
+}
+
+.control-item kbd {
+  background: var(--purple); color: #fff;
+  padding: 4px 8px; border-radius: 4px; font-family: monospace;
+  font-size: 11px; font-weight: 700;
+}
+
+.control-item span {
+  font-size: 12px; color: var(--text-dim);
+}
+
+.emulator-supported {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px;
+}
+
+.emulator-supported h3 {
+  font-family: var(--font-display); margin-bottom: 12px;
+  color: var(--yellow); font-size: 14px;
+}
+
+.emulator-supported ul {
+  list-style: none; padding: 0;
+}
+
+.emulator-supported li {
+  padding: 6px 0; font-size: 13px; color: var(--text-dim);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.emulator-supported li:last-child {
+  border-bottom: none;
+}
+
+.emulator-supported strong {
+  color: var(--cyan);
+}
+
+.emulator-empty {
+  text-align: center; padding: 60px 20px;
+  background: var(--bg-card); border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.empty-icon {
+  font-size: 64px; margin-bottom: 16px;
+}
+
+.emulator-empty h3 {
+  font-family: var(--font-display); color: var(--text);
+  margin-bottom: 8px; font-size: 18px;
+}
+
+.emulator-empty p {
+  color: var(--text-dim); font-size: 14px; margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 12px; color: var(--text-dim);
+  font-style: italic; margin-bottom: 16px;
+}
+
+.empty-disclaimer {
+  padding: 12px; background: rgba(255,0,170,0.1);
+  border: 1px solid var(--magenta); border-radius: 6px;
+  color: var(--magenta); font-size: 12px; margin-top: 16px;
+}
