@@ -73,6 +73,9 @@ export default function GamePage() {
       fetchGame(slug).then(r => {
         setGame(r.data.game);
         setLoading(false);
+      }).catch(err => {
+        console.error('Failed to fetch game:', err);
+        setLoading(false);
       });
     }
   }, [slug]);
