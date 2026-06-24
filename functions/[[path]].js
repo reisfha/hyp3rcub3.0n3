@@ -84,14 +84,6 @@ export async function onRequest(context) {
 
   async function seed() {
     const exists = await db.prepare('SELECT COUNT(*) as c FROM games').first();
-    if (exists.c > 0) return;
-
-    async function fetchGames() {
-      const r = await fetch(new URL('/games/games.json', url));
-      return r.json().catch(() => ({ games: [] }));
-    }
-
-    const nebulaGames = await fetchGames();
 
     const seedGames = [
       { title: '2048', slug: '2048', description: 'Merge tiles to reach 2048', category: 'Puzzle', tags: '["puzzle","numbers","classic"]', builtIn: 1, builtInComponent: 'Game2048', featured: 1 },
@@ -121,18 +113,25 @@ export async function onRequest(context) {
       { title: 'Fireboy and Watergirl', slug: 'fireboy-watergirl', description: 'Escape the temple together', category: 'Platformer', tags: '["co-op","platformer","puzzle"]', embedUrl: 'https://games.crazygames.com/en_US/fireboy-and-watergirl/index.html' },
     ];
 
-    const stmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
-    for (const g of seedGames) {
-      await stmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+    if (exists.c === 0) {
+      const stmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+      for (const g of seedGames) {
+        await stmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+      }
     }
 
-    const nebulaSlugs = new Set(seedGames.map(g => g.slug));
-    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
-    const nebulaStmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
-    for (const g of (nebulaGames.games || [])) {
-      if (nebulaSlugs.has(g.slug)) continue;
-      await nebulaStmt.bind(uid(), g.name, g.slug, g.description || '', g.category || 'Other', JSON.stringify(g.tags || []), `${CDN_BASE}/${g.file}`, 0, '', 0).run();
-      nebulaSlugs.add(g.slug);
+    const hasNebula = await db.prepare("SELECT id FROM games WHERE slug = '1' OR slug = 'zumashooter' LIMIT 1").first();
+    if (!hasNebula) {
+      const r = await fetch(new URL('/games/games.json', url));
+      const nebulaGames = await r.json().catch(() => ({ games: [] }));
+      const existingSlugs = (await db.prepare('SELECT slug FROM games').all()).results.reduce((s, r) => (s.add(r.slug), s), new Set());
+      const CDN_BASE = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
+      const nebulaStmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+      for (const g of (nebulaGames.games || [])) {
+        if (existingSlugs.has(g.slug)) continue;
+        await nebulaStmt.bind(uid(), g.name, g.slug, g.description || '', g.category || 'Other', JSON.stringify(g.tags || []), `${CDN_BASE}/${g.file}`, 0, '', 0).run();
+        existingSlugs.add(g.slug);
+      }
     }
   }
 
@@ -333,7 +332,7 @@ export async function onRequest(context) {
       const paged = games.slice(start, start + limit);
       const stats = { ...catalog.stats, totalGames: total };
       return json({
-        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
+        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
         total, page, pages: Math.ceil(total / limit), stats
       });
     }
