@@ -18,7 +18,7 @@ const games = [
   { title: 'Minesweeper', slug: 'minesweeper', description: 'Find the mines without blowing up', category: 'Puzzle', tags: ['puzzle', 'classic', 'mines'], builtIn: true, builtInComponent: 'MinesweeperGame' },
    { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades. Get rich.', category: 'Idle', tags: ['idle', 'clicker', 'cookie'], builtIn: true, builtInComponent: 'CookieClickerGame' },
    { title: 'Retro Emulator', slug: 'retro-emulator', description: 'Play classic games from NES, SNES, GameBoy, GBA, and N64 by loading ROM files', category: 'Emulation', tags: ['emulator', 'retro', 'classic', 'nes', 'snes', 'gameboy'], builtIn: true, builtInComponent: 'EmulatorGame', featured: true },
-  { title: "Euclid's Maelstrom", slug: 'euclids-maelstrom', description: 'Navigate impossible geometries in this non-Euclidean maze. Portals, one-way doors, and 20 levels of topological puzzles.', category: 'Puzzle', tags: ['puzzle', 'maze', 'non-euclidean', 'portal'], builtIn: true, builtInComponent: 'EuclidsMaelstrom', featured: true },
+  { title: 'Void Maze', slug: 'void-maze', description: 'A top-down non-Euclidean maze — only a small circle of vision, and the darkness shifts the walls behind you', category: 'Puzzle', tags: ['maze', 'dark', 'puzzle', 'non-euclidean'], builtIn: true, builtInComponent: 'VoidMaze' },
 
   /* === Embed from NEBULA CDN (jsdelivr) === */
   { title: 'Subway Surfers Barcelona', slug: 'subway-surfers', description: 'Endless runner — dodge trains through Barcelona', category: 'Endless Runner', tags: ['runner', '3d', 'popular'], embedUrl: `${CDN}/games/subwaysurfersbarcelona.html`, featured: true },
