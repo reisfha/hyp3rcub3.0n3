@@ -128,6 +128,8 @@ export async function onRequest(context) {
   }
 
   try {
+    await seed();
+    
     if (path === '/api/health') {
       return json({ status: 'ok', user: user ? user.username : null });
     }
