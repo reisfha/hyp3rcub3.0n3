@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import Admin from './pages/Admin';
 import RequestGame from './pages/RequestGame';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/leaderboard/:slug" element={<Leaderboard />} />
           <Route path="/request" element={<RequestGame />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <footer className="footer">
