@@ -107,7 +107,6 @@ export async function onRequest(context) {
       { title: 'Minesweeper', slug: 'minesweeper', description: 'Find the mines', category: 'Puzzle', tags: '["puzzle","classic","mines"]', builtIn: 1, builtInComponent: 'MinesweeperGame' },
       { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades.', category: 'Idle', tags: '["idle","clicker","cookie"]', embedUrl: 'https://orteil.dashnet.org/cookieclicker/', featured: 1 },
       { title: 'Retro Emulator', slug: 'retro-emulator', description: 'Play classic games from NES, SNES, GameBoy, GBA, and N64 by loading ROM files', category: 'Emulation', tags: '["emulator","retro","classic","nes","snes","gameboy"]', builtIn: 1, builtInComponent: 'EmulatorGame', featured: 1 },
-      { title: "Euclid's Maelstrom", slug: 'euclids-maelstrom', description: 'Navigate impossible geometries in this non-Euclidean maze. Portals, one-way doors, and 20 levels of topological puzzles.', category: 'Puzzle', tags: '["puzzle","maze","non-euclidean","portal"]', builtIn: 1, builtInComponent: 'EuclidsMaelstrom', featured: 1 },
       { title: 'Subway Surfers Barcelona', slug: 'subway-surfers', description: 'Endless runner — dodge trains', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/subwaysurfersbarcelona.html', featured: 1 },
       { title: 'Subway Surfers Miami', slug: 'subway-surfers-miami', description: 'Endless runner — dash through Miami!', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/subwaysurfersmiami.html' },
       { title: 'Temple Run 2', slug: 'temple-run-2', description: 'Escape the temple', category: 'Endless Runner', tags: '["runner","3d","popular"]', embedUrl: '/games/templerun2.html', featured: 1 },
@@ -125,6 +124,15 @@ export async function onRequest(context) {
     const stmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
     for (const g of seedGames) {
       await stmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+    }
+
+    const nebulaSlugs = new Set(seedGames.map(g => g.slug));
+    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
+    const nebulaStmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+    for (const g of (nebulaGames.games || [])) {
+      if (nebulaSlugs.has(g.slug)) continue;
+      await nebulaStmt.bind(uid(), g.name, g.slug, g.description || '', g.category || 'Other', JSON.stringify(g.tags || []), `${CDN_BASE}/${g.file}`, 0, '', 0).run();
+      nebulaSlugs.add(g.slug);
     }
   }
 
@@ -317,13 +325,13 @@ export async function onRequest(context) {
       const category = url.searchParams.get('category') || '';
       const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
       const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 100);
-      let games = (catalog.games || []).slice(0, 500);
+      let games = catalog.games || [];
       if (search) { const s = search.toLowerCase(); games = games.filter(g => g.name.toLowerCase().includes(s) || g.tags?.some(t => t.includes(s))); }
       if (category && category !== 'All') { games = games.filter(g => (g.category || 'Other') === category); }
       const total = games.length;
       const start = (page - 1) * limit;
       const paged = games.slice(start, start + limit);
-      const stats = { ...catalog.stats, totalGames: 500 };
+      const stats = { ...catalog.stats, totalGames: total };
       return json({
         games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
         total, page, pages: Math.ceil(total / limit), stats
@@ -333,7 +341,8 @@ export async function onRequest(context) {
     if (path === '/api/nebula/categories') {
       const r = await fetch(new URL('/games/games.json', url).toString());
       const catalog = await r.json();
-      const stats = { ...catalog.stats, totalGames: 500 };
+      const totalGames = (catalog.games || []).length;
+      const stats = { ...catalog.stats, totalGames };
       return json({ categories: catalog.categories || [], stats });
     }
 

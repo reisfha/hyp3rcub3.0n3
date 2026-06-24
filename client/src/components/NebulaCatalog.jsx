@@ -51,7 +51,7 @@ export default function NebulaCatalog() {
   return (
     <div>
       <div className="catalog-controls" style={{ marginBottom: 16 }}>
-        <SearchBar value={search} onChange={handleSearch} placeholder="Search 500 games..." />
+        <SearchBar value={search} onChange={handleSearch} placeholder="Search NEBULA games..." />
         <select className="sort-select" value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -77,8 +77,8 @@ export default function NebulaCatalog() {
           {totalPages > 1 && (
             <div className="pagination">
               <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
-              <span>{page} / {Math.min(totalPages, 50)}</span>
-              <button disabled={page >= totalPages || page >= 50} onClick={() => setPage(p => p + 1)}>Next →</button>
+              <span>{page} / {totalPages}</span>
+              <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
             </div>
           )}
         </>

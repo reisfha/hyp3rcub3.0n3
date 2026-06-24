@@ -48,7 +48,7 @@ router.get('/catalog', (req, res) => {
   try {
     const catalog = readCatalog();
     const { search, category, page = 1, limit = 50 } = req.query;
-    let games = (catalog.games || []).slice(0, 500);
+    let games = catalog.games || [];
 
     if (search) {
       const s = search.toLowerCase();
@@ -61,7 +61,7 @@ router.get('/catalog', (req, res) => {
     const total = games.length;
     const start = (page - 1) * limit;
     const paged = games.slice(start, start + Number(limit));
-    const stats = { ...catalog.stats, totalGames: 500 };
+    const stats = { ...catalog.stats, totalGames: total };
 
     res.json({
       games: paged.map(g => ({
@@ -91,7 +91,8 @@ router.get('/catalog', (req, res) => {
 router.get('/categories', (req, res) => {
   try {
     const catalog = readCatalog();
-    const stats = { ...catalog.stats, totalGames: 500 };
+    const totalGames = (catalog.games || []).length;
+    const stats = { ...catalog.stats, totalGames };
     res.json({ categories: catalog.categories || [], stats });
   } catch (err) {
     res.status(500).json({ error: err.message });
