@@ -120,11 +120,22 @@ export async function onRequest(context) {
         await stmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
       }
     } else {
-      const existingSlugs = (await db.prepare('SELECT slug FROM games').all()).results.reduce((s, r) => (s.add(r.slug), s), new Set());
+      const existing = (await db.prepare('SELECT slug, title, embed_url, built_in, built_in_component FROM games').all()).results;
+      const existingBySlug = {};
+      for (const r of existing) existingBySlug[r.slug] = r;
       const upsertStmt = db.prepare(`INSERT OR IGNORE INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+      const updateStmt = db.prepare(`UPDATE games SET title=?, description=?, category=?, tags=?, embed_url=?, built_in=?, built_in_component=?, featured=? WHERE slug=?`);
       for (const g of seedGames) {
-        if (!existingSlugs.has(g.slug)) {
+        if (!existingBySlug[g.slug]) {
           await upsertStmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+        } else {
+          const old = existingBySlug[g.slug];
+          const newEmbed = g.embedUrl || '';
+          const newBuiltIn = g.builtIn || 0;
+          const newComp = g.builtInComponent || '';
+          if (old.title !== g.title || old.embed_url !== newEmbed || old.built_in !== newBuiltIn || old.built_in_component !== newComp) {
+            await updateStmt.bind(g.title, g.description, g.category, g.tags, newEmbed, newBuiltIn, newComp, g.featured || 0, g.slug).run();
+          }
         }
       }
     }
