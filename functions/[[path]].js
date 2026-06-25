@@ -355,7 +355,7 @@ export async function onRequest(context) {
       const paged = games.slice(start, start + limit);
       const stats = { ...catalog.stats, totalGames: total };
       return json({
-        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/nebula/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
+        games: paged.map(g => ({ _id: g.id, title: g.name, slug: g.slug, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/nebula/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
         total, page, pages: Math.ceil(total / limit), stats
       });
     }

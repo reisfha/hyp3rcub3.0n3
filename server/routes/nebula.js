@@ -67,7 +67,7 @@ router.get('/catalog', (req, res) => {
       games: paged.map(g => ({
         _id: g.id,
         title: g.name,
-        slug: `nebula-${g.slug}`,
+        slug: g.slug,
         category: g.category || 'Other',
         tags: g.tags || [],
         description: g.description,

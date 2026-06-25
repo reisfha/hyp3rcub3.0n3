@@ -4,3 +4,5 @@ client/dist/
 *.log
 .DS_Store
 .vscode/
+data/games.db
+data/users.db

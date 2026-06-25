@@ -43,45 +43,17 @@ export default function GamePage() {
   };
 
   useEffect(() => {
-    if (slug.startsWith('nebula-')) {
-      const nebulaSlug = slug.replace('nebula-', '');
-      fetch('/api/nebula/catalog?limit=1&search=' + encodeURIComponent(nebulaSlug))
-        .then(r => r.json())
-        .then(data => {
-          const found = data.games?.find(g => g.slug === slug);
-          if (found) {
-            setGame({ ...found, _id: nebulaSlug, builtIn: false });
-          } else {
-            setGame({
-              _id: nebulaSlug,
-              title: nebulaSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-              slug,
-              description: 'Play this game from the NEBULA CDN collection',
-              category: 'NEBULA',
-              tags: [],
-              embedUrl: `/games/${nebulaSlug}.html`,
-              thumbnail: '',
-              plays: 0,
-              rating: 0,
-              ratingCount: 0,
-              builtIn: false
-            });
-          }
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    } else {
-      fetchGame(slug).then(r => {
-        setGame(r.data.game);
-        setLoading(false);
-      }).catch(err => {
-        console.error('Failed to fetch game:', err);
-        setLoading(false);
-      });
-    }
+    const gameSlug = slug.startsWith('nebula-') ? slug.replace('nebula-', '') : slug;
+    fetchGame(gameSlug).then(r => {
+      setGame(r.data.game);
+      setLoading(false);
+    }).catch(err => {
+      console.error('Failed to fetch game:', err);
+      setLoading(false);
+    });
   }, [slug]);
 
-  const gameSlug = slug.startsWith('nebula-') ? null : slug;
+  const gameSlug = slug.startsWith('nebula-') ? slug.replace('nebula-', '') : slug;
 
   useEffect(() => {
     if (user && gameSlug) {
