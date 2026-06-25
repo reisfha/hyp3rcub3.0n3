@@ -78,12 +78,12 @@ export default function GamePage() {
   if (!game) return <div className="page">Game not found</div>;
 
   const BuiltInComponent = builtInGames[game.builtInComponent];
-  const isNebula = slug.startsWith('nebula-');
+  const isNebula = game.embedUrl?.startsWith('/nebula/');
 
   return (
     <div className="page game-page">
       <div className="game-page-header">
-        <Link to="/games" className="back-link">← Back to Games</Link>
+        <Link to={isNebula ? '/games?tab=nebula' : '/games'} className="back-link">← Back to Games</Link>
         <h1>{game.title}</h1>
       </div>
 

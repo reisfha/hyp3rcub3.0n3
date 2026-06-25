@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import GameCard from './GameCard';
 import SearchBar from './SearchBar';
 
-const CDN = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
-
-export default function NebulaCatalog() {
+export default function NebulaCatalog({ initialSearch = '' }) {
   const [games, setGames] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -40,12 +38,11 @@ export default function NebulaCatalog() {
 
   useEffect(() => {
     loadPage(page);
-  }, [page, category]);
+  }, [page, category, search]);
 
   const handleSearch = (val) => {
     setSearch(val);
-    clearTimeout(window._nebulaSearch);
-    window._nebulaSearch = setTimeout(() => { setPage(1); loadPage(1); }, 400);
+    setPage(1);
   };
 
   return (

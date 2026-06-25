@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { fetchGames, fetchCategories, fetchAvailableTags } from '../api/client';
 import GameCard from '../components/GameCard';
 import SearchBar from '../components/SearchBar';
@@ -6,17 +7,20 @@ import CategoryFilter from '../components/CategoryFilter';
 import NebulaCatalog from '../components/NebulaCatalog';
 
 export default function Catalog() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') || 'main';
+  const q = searchParams.get('q') || '';
+
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(q);
   const [category, setCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [showNebula, setShowNebula] = useState(false);
 
   useEffect(() => { 
     fetchCategories().then(r => setCategories(r.data.categories));
@@ -36,6 +40,15 @@ export default function Catalog() {
   const handleSearch = (val) => {
     setSearch(val);
     setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (val) params.set('q', val); else params.delete('q');
+    setSearchParams(params, { replace: true });
+  };
+
+  const setTab = (t) => {
+    const params = new URLSearchParams(searchParams);
+    if (t === 'nebula') params.set('tab', 'nebula'); else params.delete('tab');
+    setSearchParams(params, { replace: true });
   };
 
   const toggleTag = (tag) => {
@@ -45,16 +58,16 @@ export default function Catalog() {
     setPage(1);
   };
 
-  if (showNebula) {
+  if (tab === 'nebula') {
     return (
       <div className="page catalog-page">
         <div className="catalog-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <h1>🌌 NEBULA CDN — All Games</h1>
-            <button className="btn-secondary" onClick={() => setShowNebula(false)}>← Back to Main Catalog</button>
+            <button className="btn-secondary" onClick={() => setTab('main')}>← Back to Main Catalog</button>
           </div>
         </div>
-        <NebulaCatalog />
+        <NebulaCatalog initialSearch={q} />
       </div>
     );
   }
@@ -72,7 +85,7 @@ export default function Catalog() {
             <option value="rating">Highest Rated</option>
             <option value="name">A-Z</option>
           </select>
-          <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => setShowNebula(true)}>
+          <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={() => setTab('nebula')}>
             🌌 Browse All NEBULA Games
           </button>
         </div>
