@@ -122,7 +122,8 @@ export async function onRequest(context) {
 
     const hasNebula = await db.prepare("SELECT id FROM games WHERE slug = '1' OR slug = 'zumashooter' LIMIT 1").first();
     if (!hasNebula) {
-      const r = await fetch(new URL('/games/games.json', url));
+      const nebulaReq = new Request(new URL('/games/games.json', url).toString());
+      const r = await env.ASSETS.fetch(nebulaReq);
       const nebulaGames = await r.json().catch(() => ({ games: [] }));
       const existingSlugs = (await db.prepare('SELECT slug FROM games').all()).results.reduce((s, r) => (s.add(r.slug), s), new Set());
       const nebulaStmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
@@ -299,7 +300,21 @@ export async function onRequest(context) {
       }
 
       const game = await db.prepare('SELECT * FROM games WHERE slug = ?').bind(slug).first();
-      if (!game) return json({ error: 'Game not found' }, 404);
+      if (!game) {
+        const nebulaReq = new Request(new URL('/games/games.json', url).toString());
+        const nebulaR = await env.ASSETS.fetch(nebulaReq);
+        const catalog = await nebulaR.json().catch(() => ({}));
+        const nebulaGame = (catalog.games || []).find(g => g.slug === slug);
+        if (nebulaGame) {
+          return json({ game: {
+            _id: nebulaGame.id, title: nebulaGame.name, slug: nebulaGame.slug,
+            description: nebulaGame.description || '', category: nebulaGame.category || 'Other',
+            tags: nebulaGame.tags || [], embedUrl: '/nebula/' + nebulaGame.file,
+            thumbnail: '', plays: 0, rating: 0, ratingCount: 0, builtIn: false
+          }});
+        }
+        return json({ error: 'Game not found' }, 404);
+      }
       await db.prepare('UPDATE games SET plays = plays + 1 WHERE id = ?').bind(game.id).run();
       return json({ game: formatGame({ ...game, plays: game.plays + 1 }) });
     }
@@ -325,8 +340,8 @@ export async function onRequest(context) {
     }
 
     if (path === '/api/nebula/catalog') {
-      const nebulaUrl = new URL('/games/games.json', url);
-      const r = await fetch(nebulaUrl.toString());
+      const nebulaReq = new Request(new URL('/games/games.json', url).toString());
+      const r = await env.ASSETS.fetch(nebulaReq);
       const catalog = await r.json();
       const search = url.searchParams.get('search') || '';
       const category = url.searchParams.get('category') || '';
@@ -346,7 +361,8 @@ export async function onRequest(context) {
     }
 
     if (path === '/api/nebula/categories') {
-      const r = await fetch(new URL('/games/games.json', url).toString());
+      const nebulaReq = new Request(new URL('/games/games.json', url).toString());
+      const r = await env.ASSETS.fetch(nebulaReq);
       const catalog = await r.json();
       const totalGames = (catalog.games || []).length;
       const stats = { ...catalog.stats, totalGames };
