@@ -135,10 +135,12 @@ export async function onRequest(context) {
     }
 
     const cdnPrefix = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/';
-    const oldEntries = await db.prepare('SELECT id, embed_url FROM games WHERE embed_url LIKE ?').bind(cdnPrefix + '%').all();
-    for (const row of (oldEntries.results || [])) {
-      const proxyUrl = '/nebula/' + row.embed_url.slice(cdnPrefix.length);
-      await db.prepare('UPDATE games SET embed_url = ? WHERE id = ?').bind(proxyUrl, row.id).run();
+    const allGames = await db.prepare('SELECT id, embed_url FROM games').all();
+    for (const row of (allGames.results || [])) {
+      if (row.embed_url && row.embed_url.startsWith(cdnPrefix)) {
+        const proxyUrl = '/nebula/' + row.embed_url.slice(cdnPrefix.length);
+        await db.prepare('UPDATE games SET embed_url = ? WHERE id = ?').bind(proxyUrl, row.id).run();
+      }
     }
   }
 
