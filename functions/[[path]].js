@@ -133,6 +133,13 @@ export async function onRequest(context) {
         existingSlugs.add(g.slug);
       }
     }
+
+    const cdnPrefix = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/';
+    const oldEntries = await db.prepare('SELECT id, embed_url FROM games WHERE embed_url LIKE ?').bind(cdnPrefix + '%').all();
+    for (const row of (oldEntries.results || [])) {
+      const proxyUrl = '/nebula/' + row.embed_url.slice(cdnPrefix.length);
+      await db.prepare('UPDATE games SET embed_url = ? WHERE id = ?').bind(proxyUrl, row.id).run();
+    }
   }
 
   try {
