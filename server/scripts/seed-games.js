@@ -18,7 +18,7 @@ const games = [
   { title: 'Minesweeper', slug: 'minesweeper', description: 'Find the mines without blowing up', category: 'Puzzle', tags: ['puzzle', 'classic', 'mines'], builtIn: true, builtInComponent: 'MinesweeperGame' },
    { title: 'Cookie Clicker', slug: 'cookie-clicker', description: 'Click cookies. Buy upgrades. Get rich.', category: 'Idle', tags: ['idle', 'clicker', 'cookie'], builtIn: true, builtInComponent: 'CookieClickerGame' },
    { title: 'Retro Emulator', slug: 'retro-emulator', description: 'Play classic games from NES, SNES, GameBoy, GBA, N64, and more by loading ROM files', category: 'Emulation', tags: ['emulator', 'retro', 'classic', 'nes', 'snes', 'gameboy'], embedUrl: '/games/emulatorjs.html', featured: true },
-  { title: 'Void Maze', slug: 'void-maze', description: 'A top-down non-Euclidean maze — only a small circle of vision, and the darkness shifts the walls behind you', category: 'Puzzle', tags: ['maze', 'dark', 'puzzle', 'non-euclidean'], builtIn: true, builtInComponent: 'VoidMaze' },
+  { title: 'Void Maze', slug: 'void-maze', description: 'A 2D platformer through stacked 4D rooms — 10×8 rooms arranged in a shifting grid. Walk off-screen edges to explore, each room cycles its layer when you leave. Find the hidden exit in one of 16+ stacked dimensions.', category: 'Puzzle', tags: ['platformer', '4d', 'puzzle', 'non-euclidean', 'rooms'], builtIn: true, builtInComponent: 'VoidMaze' },
   { title: 'Nonogram', slug: 'nonogram', description: 'Reveal the hidden picture by filling cells based on number clues', category: 'Puzzle', tags: ['puzzle', 'logic', 'grid', 'picross'], builtIn: true, builtInComponent: 'NonogramGame' },
 
   /* === Embed from NEBULA CDN (jsdelivr) === */
