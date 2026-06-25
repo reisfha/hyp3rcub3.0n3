@@ -188,16 +188,18 @@ export default function VoidMaze({ onScore }) {
     const cfg = LEVELS[Math.min(lvl, LEVELS.length - 1)];
     const world = generateLevel(cfg);
     const key = '0,0';
+    const grid = world.rooms[key][0];
+    grid[ROWS - 1][2] = 1;
     gRef.current = {
       ...world,
       level: lvl,
       score: gRef.current ? gRef.current.score : 0,
       lvlDone: false,
       gameDone: false,
-      player: { x: TILE * 2, y: TILE * 2, vx: 0, vy: 0 },
+      player: { x: TILE * 2, y: (ROWS - 1) * TILE - PH, vx: 0, vy: 0 },
       roomPos: { x: 0, y: 0 },
-      grounded: false,
-      grid: world.rooms[key][0],
+      grounded: true,
+      grid,
       flashTimer: 0,
     };
     forceUpdate();
