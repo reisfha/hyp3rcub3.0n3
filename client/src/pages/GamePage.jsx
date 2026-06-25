@@ -18,11 +18,12 @@ import MinesweeperGame from '../games/MinesweeperGame';
 import CookieClickerGame from '../games/CookieClickerGame';
 import EmulatorGame from '../games/EmulatorGame';
 import VoidMaze from '../games/VoidMaze';
+import NonogramGame from '../games/NonogramGame';
 
 const builtInGames = {
   Game2048, SnakeGame, BreakoutGame, TetrisGame, FlappyBirdGame,
   PacmanGame, DinoGame, AsteroidsGame, PongGame, SpaceInvadersGame,
-  MinesweeperGame, CookieClickerGame, EmulatorGame, VoidMaze
+  MinesweeperGame, CookieClickerGame, EmulatorGame, VoidMaze, NonogramGame
 };
 
 export default function GamePage() {

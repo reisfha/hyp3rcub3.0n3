@@ -111,12 +111,21 @@ export async function onRequest(context) {
       { title: 'Basket Random', slug: 'basket-random', description: 'Random physics basketball', category: 'Sports', tags: '["basketball","physics","funny"]', embedUrl: 'https://games.crazygames.com/en_US/basket-random/index.html', featured: 1 },
       { title: 'Geometry Dash', slug: 'geometry-dash', description: 'Jump through rhythm-based obstacles', category: 'Platformer', tags: '["rhythm","platformer","hard"]', embedUrl: 'https://games.crazygames.com/en_US/geometry-dash/index.html', featured: 1 },
       { title: 'Fireboy and Watergirl', slug: 'fireboy-watergirl', description: 'Escape the temple together', category: 'Platformer', tags: '["co-op","platformer","puzzle"]', embedUrl: 'https://games.crazygames.com/en_US/fireboy-and-watergirl/index.html' },
+      { title: 'Nonogram', slug: 'nonogram', description: 'Reveal the hidden picture by filling cells based on number clues', category: 'Puzzle', tags: '["puzzle","logic","grid","picross"]', builtIn: 1, builtInComponent: 'NonogramGame' },
     ];
 
     if (exists.c === 0) {
       const stmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
       for (const g of seedGames) {
         await stmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+      }
+    } else {
+      const existingSlugs = (await db.prepare('SELECT slug FROM games').all()).results.reduce((s, r) => (s.add(r.slug), s), new Set());
+      const upsertStmt = db.prepare(`INSERT OR IGNORE INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+      for (const g of seedGames) {
+        if (!existingSlugs.has(g.slug)) {
+          await upsertStmt.bind(uid(), g.title, g.slug, g.description, g.category, g.tags, g.embedUrl || '', g.builtIn || 0, g.builtInComponent || '', g.featured || 0).run();
+        }
       }
     }
 
