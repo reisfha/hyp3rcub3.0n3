@@ -54,6 +54,15 @@ export default function GamePage() {
     });
   }, [slug]);
 
+  useEffect(() => {
+    if (game) {
+      document.title = `${game.title} - Hyp3rCub3.0n3`;
+    }
+    return () => {
+      document.title = 'Hyp3rCub3.0n3';
+    };
+  }, [game]);
+
   const gameSlug = slug.startsWith('nebula-') ? slug.replace('nebula-', '') : slug;
 
   useEffect(() => {
