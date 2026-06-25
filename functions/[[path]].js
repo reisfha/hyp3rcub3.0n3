@@ -125,11 +125,10 @@ export async function onRequest(context) {
       const r = await fetch(new URL('/games/games.json', url));
       const nebulaGames = await r.json().catch(() => ({ games: [] }));
       const existingSlugs = (await db.prepare('SELECT slug FROM games').all()).results.reduce((s, r) => (s.add(r.slug), s), new Set());
-      const CDN_BASE = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
       const nebulaStmt = db.prepare(`INSERT INTO games (id, title, slug, description, category, tags, embed_url, built_in, built_in_component, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
       for (const g of (nebulaGames.games || [])) {
         if (existingSlugs.has(g.slug)) continue;
-        await nebulaStmt.bind(uid(), g.name, g.slug, g.description || '', g.category || 'Other', JSON.stringify(g.tags || []), `${CDN_BASE}/${g.file}`, 0, '', 0).run();
+        await nebulaStmt.bind(uid(), g.name, g.slug, g.description || '', g.category || 'Other', JSON.stringify(g.tags || []), `/nebula/${g.file}`, 0, '', 0).run();
         existingSlugs.add(g.slug);
       }
     }
@@ -201,6 +200,15 @@ export async function onRequest(context) {
       binds.push(limit, (page - 1) * limit);
       const rows = await db.prepare(sql).bind(...binds).all();
       return json({ games: rows.results.map(formatGame), total, page, pages: Math.ceil(total / limit) });
+    }
+
+    if (path.startsWith('/nebula/')) {
+      const filePath = path.replace('/nebula/', '');
+      const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${filePath}`;
+      const r = await fetch(cdnUrl);
+      if (!r.ok) return json({ error: 'Not found' }, 404);
+      const contentType = filePath.endsWith('.html') ? 'text/html; charset=utf-8' : r.headers.get('content-type') || 'application/octet-stream';
+      return new Response(r.body, { headers: { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' } });
     }
 
     if (!path.startsWith('/api/')) {
@@ -332,7 +340,7 @@ export async function onRequest(context) {
       const paged = games.slice(start, start + limit);
       const stats = { ...catalog.stats, totalGames: total };
       return json({
-        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
+        games: paged.map(g => ({ _id: g.id, title: g.name, slug: `nebula-${g.slug}`, category: g.category || 'Other', tags: g.tags || [], description: g.description, embedUrl: '/nebula/' + g.file, thumbnail: svgThumbnail(g.name, g.category), plays: 0, rating: 0, ratingCount: 0, builtIn: false })),
         total, page, pages: Math.ceil(total / limit), stats
       });
     }

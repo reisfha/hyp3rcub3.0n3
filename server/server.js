@@ -42,6 +42,21 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', user: req.user ? req.user.username : null });
 });
 
+app.get('/nebula/*', async (req, res) => {
+  const filePath = req.path.replace('/nebula/', '');
+  const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${filePath}`;
+  try {
+    const r = await fetch(cdnUrl);
+    if (!r.ok) return res.status(404).send('Not found');
+    const contentType = filePath.endsWith('.html') ? 'text/html; charset=utf-8' : r.headers.get('content-type') || 'application/octet-stream';
+    res.set('Content-Type', contentType);
+    const buf = await r.arrayBuffer();
+    res.send(Buffer.from(buf));
+  } catch (err) {
+    res.status(500).send('Proxy error');
+  }
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });

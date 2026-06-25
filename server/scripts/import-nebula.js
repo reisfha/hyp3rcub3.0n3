@@ -3,13 +3,22 @@ const Game = require('../models/Game');
 const fs = require('fs');
 const path = require('path');
 
-const CDN_BASE = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main';
+const CDN_BASE = '/nebula';
 const GAMES_JSON = path.join(__dirname, '../../client/public/games/games.json');
 
 async function importNebula() {
   const catalog = JSON.parse(fs.readFileSync(GAMES_JSON, 'utf-8'));
   const existingGames = await Game.find({});
   const existingSlugs = new Set(existingGames.map(g => g.slug));
+
+  // Fix any existing entries still using raw CDN URLs
+  const cdnPrefix = 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/';
+  for (const g of existingGames) {
+    if (g.embedUrl && g.embedUrl.startsWith(cdnPrefix)) {
+      const proxyUrl = '/nebula/' + g.embedUrl.slice(cdnPrefix.length);
+      await Game.update({ _id: g._id }, { $set: { embedUrl: proxyUrl } });
+    }
+  }
 
   let imported = 0, skipped = 0, errors = 0;
 

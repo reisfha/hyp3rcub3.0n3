@@ -71,7 +71,7 @@ router.get('/catalog', (req, res) => {
         category: g.category || 'Other',
         tags: g.tags || [],
         description: g.description,
-        embedUrl: 'https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/' + g.file,
+        embedUrl: '/nebula/' + g.file,
         thumbnail: svgThumbnail(g.name, g.category),
         plays: 0,
         rating: 0,
