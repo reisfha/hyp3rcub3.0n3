@@ -250,9 +250,9 @@ export default function VoidMaze({ onScore }) {
     const loop = () => {
       const g = gRef.current;
       if (!g) { animRef.current = requestAnimationFrame(loop); return; }
+      const p = g.player;
 
       if (!g.lvlDone && !g.gameDone && g.flashTimer === 0) {
-        const p = g.player;
         let mx = 0;
         if (keys['a'] || keys['ArrowLeft']) mx = -MOVE_SPEED;
         if (keys['d'] || keys['ArrowRight']) mx = MOVE_SPEED;
