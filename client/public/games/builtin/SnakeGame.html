@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Snake</title><style>
+body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif}
+svg{border-radius:8px;max-width:100%;height:auto;display:block}
+.hint{text-align:center;color:#6666aa;font-size:12px;margin-top:8px}
+.game{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;position:relative}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:8px;z-index:10}
+.overlay h2{font-family:'Orbitron',monospace;font-size:28px;color:#ff00aa;text-shadow:0 0 10px #ff00aa}
+.overlay p{font-size:18px}
+.btn{background:#00f0ff;color:#000;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700}
+.btn:hover{box-shadow:0 0 10px #00f0ff}
+</style></head><body><div class="game" id="game"><svg id="svg" width="400" height="400" style="border-radius:8px"></svg><div class="hint">WASD / Arrow Keys</div></div>
+<script>
+const SIZE=20,TILE=20,W=SIZE*TILE,INIT=[{x:10,y:10}];
+let snake=INIT.map(p=>({...p})),food={x:15,y:10},dir={x:1,y:0},dead=false,dirCached={x:1,y:0};
+const svg=document.getElementById('svg'),gameDiv=document.getElementById('game');
+const placeFood=s=>{let f;do{f={x:Math.floor(Math.random()*SIZE),y:Math.floor(Math.random()*SIZE)}}while(s.some(p=>p.x===f.x&&p.y===f.y));return f};
+const restart=()=>{snake=INIT.map(p=>({...p}));dir={x:1,y:0};dirCached={x:1,y:0};food={x:15,y:10};dead=false;const o=gameDiv.querySelector('.overlay');if(o)o.remove()};
+const render=()=>{let html='<rect x="0" y="0" width="'+W+'" height="'+W+'" fill="#0a0a1a" rx="4"/>';
+snake.forEach((p,i)=>{html+='<rect x="'+(p.x*TILE+1)+'" y="'+(p.y*TILE+1)+'" width="'+(TILE-2)+'" height="'+(TILE-2)+'" rx="3" fill="'+(i===0?'#00f0ff':'#0088aa')+'"/>'});
+html+='<rect x="'+(food.x*TILE+2)+'" y="'+(food.y*TILE+2)+'" width="'+(TILE-4)+'" height="'+(TILE-4)+'" rx="4" fill="#ff00aa"/>';
+svg.innerHTML=html};
+setInterval(()=>{if(dead)return;
+const head={x:snake[0].x+dirCached.x,y:snake[0].y+dirCached.y};
+if(head.x<0||head.x>=SIZE||head.y<0||head.y>=SIZE||snake.some(p=>p.x===head.x&&p.y===head.y)){dead=true;
+if(gameDiv.querySelector('.overlay'))return;
+const o=document.createElement('div');o.className='overlay';o.innerHTML='<h2>Game Over</h2><p>Score: '+score+'</p><button class="btn" onclick="restart();render()">Play Again</button>';gameDiv.appendChild(o);return}
+const ate=head.x===food.x&&head.y===food.y;
+const newSnake=[head,...snake];if(!ate)newSnake.pop();
+if(ate){score+=10;food=placeFood(newSnake)}
+snake=newSnake;render()},150);
+let score=0;
+window.addEventListener('keydown',e=>{const m={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};const nd=m[e.key];if(nd&&(nd.x!==-dirCached.x||nd.y!==-dirCached.y)){dirCached=nd;e.preventDefault()}});
+render();
+</script></body></html>

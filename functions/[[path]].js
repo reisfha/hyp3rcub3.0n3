@@ -384,14 +384,17 @@ export async function onRequest(context) {
 
         if (game.built_in && game.built_in_component) {
           const safeName = gameTitle.replace(/[^a-zA-Z0-9 ]/g, '');
-          const playUrl = `${url.origin}/game/${game.slug}`;
-          const builtinHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${gameTitle}</title><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0f;color:#e0e0f0;font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}.card{background:#1a1a2e;border:1px solid #2a2a4e;border-radius:12px;padding:40px;max-width:400px}h1{font-family:'Orbitron',monospace;color:#00f0ff;text-shadow:0 0 10px #00f0ff,0 0 20px rgba(0,240,255,0.3);margin-bottom:16px}p{color:#e0e0f0;margin-bottom:24px;line-height:1.6}.btn{display:inline-block;background:#ff00aa;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;font-size:16px}.btn:hover{box-shadow:0 0 10px #ff00aa,0 0 20px rgba(255,0,170,0.3)}.note{font-size:13px;color:#6666aa;margin-top:20px}</style></head><body><div class="card"><h1>${gameTitle}</h1><p>This is a built-in game on Hyp3rCub3.0n3.<br>Play it online to experience the full game.</p><a class="btn" href="${playUrl}">Play Online</a><p class="note">To play offline, visit the site and the game will load automatically.</p></div></body></html>`;
-          return new Response(builtinHtml, {
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Content-Disposition': `attachment; filename="${safeName}.html"`
-            }
-          });
+          const builtinFileUrl = new URL(`/games/builtin/${game.built_in_component}.html`, url).toString();
+          const builtinReq = new Request(builtinFileUrl);
+          const builtinRes = await env.ASSETS.fetch(builtinReq);
+          if (builtinRes.ok) {
+            return new Response(builtinRes.body, {
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Content-Disposition': `attachment; filename="${safeName}.html"`
+              }
+            });
+          }
         }
 
         const safeName = gameTitle.replace(/[^a-zA-Z0-9 ]/g, '');

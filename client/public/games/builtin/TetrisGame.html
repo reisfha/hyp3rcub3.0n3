@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tetris</title><style>
+body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif;text-align:center}
+.game{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;position:relative}
+.score{font-family:'Orbitron',monospace;font-size:18px;color:#00f0ff;margin-bottom:8px}
+.board{display:grid;grid-template-columns:repeat(10,1fr);gap:1px;width:240px;padding:4px;background:#0a0a1a;border-radius:4px;border:2px solid #2a2a4e}
+.cell{aspect-ratio:1;border-radius:2px}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:8px;z-index:10}
+.overlay h2{font-family:'Orbitron',monospace;font-size:28px;color:#ff00aa;text-shadow:0 0 10px #ff00aa}
+.overlay p{font-size:18px}
+.btn{background:#00f0ff;color:#000;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700}
+.btn:hover{box-shadow:0 0 10px #00f0ff}
+.hint{font-size:12px;color:#6666aa}
+</style></head><body><div class="game" id="game"><div class="score" id="score">Score: 0</div><div class="board" id="board"></div><div class="hint">← → ↓, ↑ rotate, Space drop</div></div>
+<script>
+const COLS=10,ROWS=20,SIZE=24;
+const PIECES=[[[1,1,1,1]],[[1,1],[1,1]],[[1,0],[1,0],[1,1]],[[0,1],[0,1],[1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]],[[1,0],[1,1],[0,1]]];
+const COLORS=['#00f0ff','#ffcc00','#ff00aa','#00ff88','#ff6600','#9944ff','#ff3333'];
+const createBoard=()=>Array(ROWS).fill(null).map(()=>Array(COLS).fill(0));
+let board=createBoard(),score=0,dead=false;
+let piece=null;
+const randomPiece=()=>({shape:PIECES[Math.floor(Math.random()*PIECES.length)],color:COLORS[Math.floor(Math.random()*COLORS.length)],x:3,y:0});
+const collide=(b,p,dx=0,dy=0)=>{for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[r].length;c++){if(!p.shape[r][c])continue;const nx=p.x+c+dx,ny=p.y+r+dy;if(nx<0||nx>=COLS||ny>=ROWS)return true;if(ny>=0&&b[ny][nx])return true}return false};
+const merge=(b,p)=>{const nb=b.map(r=>[...r]);for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[r].length;c++){if(p.shape[r][c]&&p.y+r>=0)nb[p.y+r][p.x+c]=p.color}return nb};
+const clearRows=b=>{let cleared=0;const nb=b.filter(row=>{const full=row.every(v=>v);if(full)cleared++;return!full});while(nb.length<ROWS)nb.unshift(Array(COLS).fill(0));return{board:nb,cleared}};
+const tick=()=>{if(dead)return;const p=piece||randomPiece();if(collide(board,p,0,1)){const merged=merge(board,p);const{board:cleared,cleared:lines}=clearRows(merged);board=cleared;const pts=[0,100,300,500,800][lines]||0;score+=pts;document.getElementById('score').textContent='Score: '+score;const np=randomPiece();if(collide(cleared,np,0,0)){dead=true;showOverlay('Game Over','Score: '+score);return}piece=np}else{piece={...p,y:p.y+1}}render()};
+const render=()=>{let html='';for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){let bg='#0a0a1a';if(board[r][c])bg=board[r][c];else if(piece&&r>=piece.y&&r<piece.y+piece.shape.length&&c>=piece.x&&c<piece.x+piece.shape[0].length&&piece.shape[r-piece.y]?.[c-piece.x])bg=piece.color;html+='<div class="cell" style="background:'+bg+';'+(board[r][c]?'box-shadow:0 0 4px '+board[r][c]:'')+'"></div>'}document.getElementById('board').innerHTML=html};
+const showOverlay=(title,msg)=>{const o=document.createElement('div');o.className='overlay';o.id='overlay';o.innerHTML='<h2>'+title+'</h2><p>'+msg+'</p><button class="btn" onclick="restart()">Play Again</button>';document.getElementById('game').appendChild(o)};
+const restart=()=>{board=createBoard();piece=randomPiece();score=0;dead=false;const o=document.getElementById('overlay');if(o)o.remove();document.getElementById('score').textContent='Score: 0'};
+window.addEventListener('keydown',e=>{if(dead)return;const p=piece?{...piece}:null;if(!p)return;if(e.key==='ArrowLeft'&&!collide(board,p,-1,0))p.x--;if(e.key==='ArrowRight'&&!collide(board,p,1,0))p.x++;if(e.key==='ArrowDown'&&!collide(board,p,0,1))p.y++;if(e.key==='ArrowUp'){const rot=p.shape[0].map((_,i)=>p.shape.map(r=>r[i]).reverse());if(!collide(board,{...p,shape:rot}))p.shape=rot}if(e.key===' '){while(!collide(board,p,0,1))p.y++;e.preventDefault()}piece=p;render();e.preventDefault()});
+piece=randomPiece();render();setInterval(tick,400);
+</script></body></html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cookie Clicker</title><style>
+body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif;text-align:center}
+.game{display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px}
+.count{font-size:48px;color:#fc0;text-shadow:0 0 20px rgba(255,204,0,0.5)}
+.cookie-btn{background:none;border:none;cursor:pointer;font-size:80px;transition:transform 0.1s}
+.cookie-btn:active{transform:scale(0.9)}
+.upgrades{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.upgrade{padding:8px 16px;border-radius:6px;border:1px solid #2a2a4e;background:#1a1a2e;color:#e0e0f0;cursor:pointer;font-size:13px}
+.upgrade:hover:not(:disabled){border-color:#fc0;color:#fc0}
+.upgrade:disabled{opacity:0.3;cursor:default}
+.hint{font-size:12px;color:#6666aa}
+</style></head><body><div class="game"><div class="count" id="count">0 🍪</div>
+<button class="cookie-btn" id="cookieBtn"><div style="font-size:80px">🍪</div></button>
+<div class="hint">Click the cookie!</div>
+<div class="upgrades">
+<button class="upgrade" id="up1">🚀 Double click power — 50 🍪</button>
+<button class="upgrade" id="up2">🔥 Triple click power — 200 🍪</button>
+</div></div>
+<script>
+let cookies=0,mult=1;
+const el=document.getElementById('count');
+document.getElementById('cookieBtn').onclick=()=>{cookies+=mult;el.textContent=Math.floor(cookies)+' 🍪';updateBtns()};
+document.getElementById('up1').onclick=()=>{if(cookies>=50){cookies-=50;mult*=2;el.textContent=Math.floor(cookies)+' 🍪';updateBtns()}};
+document.getElementById('up2').onclick=()=>{if(cookies>=200){cookies-=200;mult*=3;el.textContent=Math.floor(cookies)+' 🍪';updateBtns()}};
+function updateBtns(){document.getElementById('up1').disabled=cookies<50;document.getElementById('up2').disabled=cookies<200}
+setInterval(()=>{const auto=Math.floor(mult/2);if(auto>0){cookies+=auto;el.textContent=Math.floor(cookies)+' 🍪';updateBtns()}},1000);
+updateBtns();
+</script></body></html>

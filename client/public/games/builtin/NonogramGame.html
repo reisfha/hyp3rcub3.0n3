@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonogram</title><style>
+body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif;text-align:center}
+.game{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;position:relative;user-select:none}
+.controls{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.controls label{font-size:13px;color:#aaa}
+.controls input[type=range]{width:100px;accent-color:#3388ee}
+.controls .val{font-size:14px;font-weight:700;color:#eee;min-width:50px}
+.controls button{background:#3388ee;color:#000;border:none;padding:2px 10px;font-size:12px;border-radius:4px;font-weight:700;cursor:pointer}
+.controls button:hover{box-shadow:0 0 6px #3388ee}
+.grid{display:inline-grid;border:2px solid #555;border-radius:4px;overflow:hidden;background:#0d0d20}
+.cell{cursor:pointer;transition:background 0.1s;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1}
+.cell.clue-h{background:#12122a;border-right:1px solid #2a2a4a;border-bottom:1px solid #2a2a4a}
+.cell.clue-v{background:#12122a;border-right:1px solid #2a2a4a;border-bottom:1px solid #2a2a4a}
+.cell.data{border-right:1px solid #1e1e3a;border-bottom:1px solid #1e1e3a}
+.cell.corner{background:#12122a}
+.info{font-size:13px;color:#aaa;margin-top:8px}
+.info span{margin:0 8px}
+.hint{font-size:12px;color:#6666aa}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:8px;z-index:10}
+.overlay h2{font-size:24px;color:#ff00aa;text-shadow:0 0 10px #ff00aa;margin:0}
+.overlay p{font-size:18px;margin:4px 0}
+.overlay button{background:#ff00aa;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700}
+.overlay button:hover{box-shadow:0 0 10px #ff00aa}
+</style></head><body><div class="game" id="game"><div class="controls"><label>Size:</label><input type="range" id="sizeRange" min="5" max="25" value="10"><span class="val" id="sizeLabel">10×10</span><button id="newBtn">New</button><button id="resetBtn">Reset</button></div><div class="grid" id="grid"></div><div class="info"><span id="timer">00:00</span><span id="filled">0/100</span></div><div class="hint">Left click to fill · Right click to mark ✕</div></div>
+<script>
+var size=10,solution=initGrid(10),grid=initGrid(10),won=false,startTime=Date.now(),elapsed=0,timerId=null;
+var sizeRange=document.getElementById('sizeRange'),sizeLabel=document.getElementById('sizeLabel'),gridEl=document.getElementById('grid'),timerEl=document.getElementById('timer'),filledEl=document.getElementById('filled'),gameEl=document.getElementById('game');
+function initGrid(s){return Array.from({length:s},function(){return Array(s).fill(0)})}
+function generateGrid(s){var d=s<=5?0.4:s<=10?0.35:s<=15?0.3:s<=20?0.28:0.25,g=Array.from({length:s},function(){return Array(s).fill(0)}),r,c;for(r=0;r<s;r++)for(c=0;c<s;c++)g[r][c]=Math.random()<d?1:0;for(r=0;r<s;r++){var f=g[r].filter(function(v){return v}).length;if(f===0)g[r][Math.random()*s|0]=1;if(f===s)g[r][Math.random()*s|0]=0}for(c=0;c<s;c++){f=0;for(r=0;r<s;r++)f+=g[r][c];if(f===0)g[Math.random()*s|0][c]=1;if(f===s)g[Math.random()*s|0][c]=0}var bigRow=Math.random()*s|0,bigLen=Math.floor(s*(0.55+Math.random()*0.3)),bigStart=Math.random()*(s-bigLen)|0;for(c=bigStart;c<bigStart+bigLen;c++)g[bigRow][c]=1;return g}
+function getClues(solution){var size=solution.length,rowClues=solution.map(function(row){var c=[],n=0,i;for(i=0;i<row.length;i++){if(row[i])n++;else if(n){c.push(n);n=0}}if(n)c.push(n);return c.length?c:[0]}),colClues=[],r,c;for(c=0;c<size;c++){var clue=[],n=0;for(r=0;r<size;r++){if(solution[r][c])n++;else if(n){clue.push(n);n=0}}if(n)clue.push(n);colClues.push(clue.length?clue:[0])}return{rowClues:rowClues,colClues:colClues}}
+function checkWin(g){for(var r=0;r<size;r++)for(var c=0;c<size;c++){if(solution[r][c]===1&&g[r][c]!==1)return false;if(solution[r][c]===0&&g[r][c]===1)return false}return true}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function newPuzzle(s){solution=generateGrid(s);grid=initGrid(s);won=false;startTime=Date.now();elapsed=0;removeOverlay();render()}
+function render(){var clues=getClues(solution),maxRowLen=1,i;for(i=0;i<clues.rowClues.length;i++)maxRowLen=Math.max(maxRowLen,clues.rowClues[i].length);var maxColLen=1;for(i=0;i<clues.colClues.length;i++)maxColLen=Math.max(maxColLen,clues.colClues[i].length);var cellSize=Math.max(16,Math.min(40,Math.floor(340/size))),clueCellW=size<=12?22:size<=18?17:13,clueCellH=size<=12?20:size<=18?15:12,clueFont=size<=12?12:size<=18?10:8;
+var html='',r,c;var corner=document.createElement('div');corner.style.cssText='grid-row:1;grid-column:1;background:#12122a';html+='<div class="cell corner" style="grid-row:1;grid-column:1"></div>';
+for(c=0;c<size;c++){html+='<div class="cell clue-v" style="grid-row:1;grid-column:'+(c+2)+';display:flex;flex-direction:column;justify-content:flex-end;width:'+cellSize+'px;background:#12122a">';var clue=clues.colClues[c];for(i=0;i<maxColLen-clue.length;i++)html+='<div style="height:'+clueCellH+'px"></div>';for(i=0;i<clue.length;i++)html+='<div style="height:'+clueCellH+'px;display:flex;align-items:center;justify-content:center;font-size:'+(clue[i]===0?clueFont-2:clueFont)+'px;font-weight:700;color:'+(clue[i]===0?'#444':'#6af')+';line-height:1;width:'+clueCellW+'px">'+clue[i]+'</div>';html+='</div>'}
+for(r=0;r<size;r++){html+='<div class="cell clue-h" style="grid-row:'+(r+2)+';grid-column:1;display:flex;flex-direction:row;justify-content:flex-end;height:'+cellSize+'px;background:#12122a">';var clue=clues.rowClues[r];for(i=0;i<maxRowLen-clue.length;i++)html+='<div style="width:'+clueCellW+'px"></div>';for(i=0;i<clue.length;i++)html+='<div style="width:'+clueCellW+'px;display:flex;align-items:center;justify-content:center;font-size:'+(clue[i]===0?clueFont-2:clueFont)+'px;font-weight:700;color:'+(clue[i]===0?'#444':'#6af')+';line-height:1">'+clue[i]+'</div>';html+='</div>';for(c=0;c<size;c++){var bg='#0d0d20';if(grid[r][c]===1)bg='#3388ee';html+='<div class="cell data" style="grid-row:'+(r+2)+';grid-column:'+(c+2)+';width:'+cellSize+'px;height:'+cellSize+'px;background:'+bg+';font-size:'+Math.max(8,cellSize-6)+'px;color:#ff5555" data-r="'+r+'" data-c="'+c+'">'+(grid[r][c]===-1?'✕':'')+'</div>'}}
+gridEl.innerHTML=html;gridEl.style.gridTemplateColumns=maxRowLen*clueCellW+'px repeat('+size+','+cellSize+'px)';gridEl.style.gridTemplateRows=maxColLen*clueCellH+'px repeat('+size+','+cellSize+'px)';sizeLabel.textContent=size+'×'+size;var filled=grid.flat().filter(function(v){return v===1}).length;filledEl.textContent='■ '+filled+'/'+(size*size)}
+function removeOverlay(){var o=document.getElementById('overlay');if(o)o.remove()}
+function handleCellClick(e){if(won)return;var t=e.target;if(!t.dataset||t.dataset.r===undefined)return;var r=+t.dataset.r,c=+t.dataset.c;if(grid[r][c]===1)grid[r][c]=0;else grid[r][c]=1;if(checkWin(grid)){won=true;elapsed=Math.floor((Date.now()-startTime)/1000);removeOverlay();var o=document.createElement('div');o.className='overlay';o.id='overlay';o.innerHTML='<h2>Puzzle Complete!</h2><p>Time: '+fmt(elapsed)+'</p><button onclick="newPuzzle(size)">New Puzzle</button>';gameEl.appendChild(o)}render()}
+function handleRightClick(e){e.preventDefault();if(won)return;var t=e.target;if(!t.dataset||t.dataset.r===undefined)return;var r=+t.dataset.r,c=+t.dataset.c;if(grid[r][c]===-1)grid[r][c]=0;else if(grid[r][c]===1)grid[r][c]=-1;else grid[r][c]=-1;render()}
+function restart(){grid=initGrid(size);won=false;startTime=Date.now();elapsed=0;removeOverlay();render()}
+gridEl.addEventListener('click',handleCellClick);gridEl.addEventListener('contextmenu',handleRightClick);
+sizeRange.addEventListener('input',function(){size=+this.value;newPuzzle(size)});
+document.getElementById('newBtn').addEventListener('click',function(){newPuzzle(size)});
+document.getElementById('resetBtn').addEventListener('click',restart);
+newPuzzle(10);
+setInterval(function(){if(!won){elapsed=Math.floor((Date.now()-startTime)/1000);timerEl.textContent=fmt(elapsed)}},1000);
+</script></body></html>
