@@ -21,6 +21,42 @@ function generateGrid(size) {
   const bigLen = Math.floor(size * (0.55 + Math.random() * 0.3));
   const bigStart = Math.random() * (size - bigLen) | 0;
   for (let c = bigStart; c < bigStart + bigLen; c++) g[bigRow][c] = 1;
+
+  function clueGroups(arr) {
+    const groups = []; let i = 0; const n = arr.length;
+    while (i < n) { while (i < n && !arr[i]) i++; if (i >= n) break; const s = i; while (i < n && arr[i]) i++; groups.push([s, i]); }
+    return groups;
+  }
+
+  function gapsBetween(groups) {
+    const gaps = [];
+    for (let i = 1; i < groups.length; i++) gaps.push([groups[i - 1][1], groups[i][0]]);
+    return gaps;
+  }
+
+  for (let iter = 0; iter < 2; iter++) {
+    for (let r = 0; r < size; r++) {
+      const groups = clueGroups(g[r]);
+      if (groups.length >= 4) {
+        const gaps = gapsBetween(groups);
+        if (gaps.length) {
+          const [lo, hi] = gaps[Math.random() * gaps.length | 0];
+          for (let c = lo; c < hi; c++) g[r][c] = 1;
+        }
+      }
+    }
+    for (let c = 0; c < size; c++) {
+      const col = g.map(row => row[c]);
+      const groups = clueGroups(col);
+      if (groups.length >= 4) {
+        const gaps = gapsBetween(groups);
+        if (gaps.length) {
+          const [lo, hi] = gaps[Math.random() * gaps.length | 0];
+          for (let r = lo; r < hi; r++) g[r][c] = 1;
+        }
+      }
+    }
+  }
   return g;
 }
 
