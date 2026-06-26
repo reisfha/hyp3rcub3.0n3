@@ -74,26 +74,81 @@ const PATTERNS = [
     '#.....#',
     '.#####.',
   ]},
+  { rows: [
+    '.....#.....',
+    '....###....',
+    '...#####...',
+    '..#######..',
+    '.#########.',
+    '###########',
+    '.#########.',
+    '..#######..',
+    '...#####...',
+    '....###....',
+    '.....#.....',
+  ]},
+  { rows: [
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '###########',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+  ]},
+  { rows: [
+    '.........',
+    '#########',
+    '#.......#',
+    '#.#####.#',
+    '#.#...#.#',
+    '#.#.#.#.#',
+    '#.#...#.#',
+    '#.#####.#',
+    '#.......#',
+    '#########',
+    '.........',
+  ]},
+  { rows: [
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '.....#.....',
+    '..#######..',
+    '...#####...',
+    '....###....',
+    '.....#.....',
+  ]},
+  { rows: [
+    '.....#.....',
+    '....###....',
+    '...#.#.#...',
+    '..#..#..#..',
+    '.#...#...#.',
+    '#....#....#',
+    '.#...#...#.',
+    '..#..#..#..',
+    '...#.#.#...',
+    '....###....',
+    '.....#.....',
+  ]},
 ];
 
 function parsePattern(p) {
   return { h: p.rows.length, w: p.rows[0].length, data: p.rows.map(r => [...r].map(ch => ch === '#' ? 1 : 0)) };
 }
 
-function generateGrid(size) {
-  const pool = PATTERNS.map(parsePattern).filter(p => p.h <= size && p.w <= size);
-  const pat = pool[Math.random() * pool.length | 0];
+function generateRandomGrid(size) {
+  const d = size <= 5 ? 0.4 : size <= 10 ? 0.35 : size <= 15 ? 0.3 : 0.25;
   const g = Array.from({ length: size }, () => Array(size).fill(0));
-  const ro = (size - pat.h) >> 1, co = (size - pat.w) >> 1;
-  for (let r = 0; r < pat.h; r++)
-    for (let c = 0; c < pat.w; c++)
-      g[ro + r][co + c] = pat.data[r][c];
-
-  const noiseD = size <= 8 ? 0.12 : size <= 14 ? 0.10 : 0.08;
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
-      if (g[r][c] === 0 && Math.random() < noiseD) g[r][c] = 1;
-
+      g[r][c] = Math.random() < d ? 1 : 0;
   for (let r = 0; r < size; r++) {
     const f = g[r].filter(v => v).length;
     if (f === 0) g[r][Math.random() * size | 0] = 1;
@@ -105,7 +160,14 @@ function generateGrid(size) {
     if (f === 0) g[Math.random() * size | 0][c] = 1;
     if (f === size) g[Math.random() * size | 0][c] = 0;
   }
+  const bigRow = Math.random() * size | 0;
+  const bigLen = Math.floor(size * (0.55 + Math.random() * 0.3));
+  const bigStart = Math.random() * (size - bigLen) | 0;
+  for (let c = bigStart; c < bigStart + bigLen; c++) g[bigRow][c] = 1;
+  return g;
+}
 
+function reduceClueGroups(g, size) {
   function clueGroups(arr) {
     const groups = []; let i = 0; const n = arr.length;
     while (i < n) { while (i < n && !arr[i]) i++; if (i >= n) break; const s = i; while (i < n && arr[i]) i++; groups.push([s, i]); }
@@ -133,6 +195,39 @@ function generateGrid(size) {
       }
     }
   }
+}
+
+function generateGrid(size) {
+  if (Math.random() < 0.25 || size < 5) {
+    return { grid: generateRandomGrid(size) };
+  }
+  const pool = PATTERNS.map(parsePattern).filter(p => p.h <= size && p.w <= size);
+  if (!pool.length) return { grid: generateRandomGrid(size) };
+  const pat = pool[Math.random() * pool.length | 0];
+  const g = Array.from({ length: size }, () => Array(size).fill(0));
+  const ro = (size - pat.h) >> 1, co = (size - pat.w) >> 1;
+  for (let r = 0; r < pat.h; r++)
+    for (let c = 0; c < pat.w; c++)
+      g[ro + r][co + c] = pat.data[r][c];
+
+  const noiseD = size <= 8 ? 0.12 : size <= 14 ? 0.10 : 0.08;
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (g[r][c] === 0 && Math.random() < noiseD) g[r][c] = 1;
+
+  for (let r = 0; r < size; r++) {
+    const f = g[r].filter(v => v).length;
+    if (f === 0) g[r][Math.random() * size | 0] = 1;
+    if (f === size) g[r][Math.random() * size | 0] = 0;
+  }
+  for (let c = 0; c < size; c++) {
+    let f = 0;
+    for (let r = 0; r < size; r++) f += g[r][c];
+    if (f === 0) g[Math.random() * size | 0][c] = 1;
+    if (f === size) g[Math.random() * size | 0][c] = 0;
+  }
+
+  reduceClueGroups(g, size);
   return { grid: g };
 }
 
