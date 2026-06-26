@@ -252,28 +252,10 @@ export default function VoidMaze({ onScore }) {
         if (p.vy > 12) p.vy = 12;
 
         let nx = p.x + p.vx;
-        if (collides(g.grid, nx, p.y)) {
-          if (p.vx > 0) nx = Math.floor((nx + PW) / TILE) * TILE - PW;
-          else nx = Math.ceil(nx / TILE) * TILE;
-          p.vx = 0;
-        }
-        p.x = nx;
-
         let ny = p.y + p.vy;
-        if (collides(g.grid, p.x, ny)) {
-          if (p.vy > 0) {
-            ny = Math.floor((ny + PH) / TILE) * TILE - PH;
-            g.grounded = true;
-          } else {
-            ny = Math.ceil(ny / TILE) * TILE;
-          }
-          p.vy = 0;
-        }
-        p.y = ny;
+        let exited = false;
 
-        if (p.y + PH > H + 8) {
-          g.flashTimer = 4;
-        } else if (p.x < -8) {
+        if (nx < -8) {
           if (g.roomPos.x > 0) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -281,9 +263,9 @@ export default function VoidMaze({ onScore }) {
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
-            g.flashTimer = 4;
-          } else { p.x = 0; }
-        } else if (p.x + PW > W + 8) {
+            g.flashTimer = 4; exited = true;
+          } else { nx = 0; }
+        } else if (nx + PW > W + 8) {
           if (g.roomPos.x < g.cfg.roomsX - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -291,9 +273,9 @@ export default function VoidMaze({ onScore }) {
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
-            g.flashTimer = 4;
-          } else { p.x = W - PW; }
-        } else if (p.y < -8) {
+            g.flashTimer = 4; exited = true;
+          } else { nx = W - PW; }
+        } else if (ny < -8) {
           if (g.roomPos.y > 0) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -301,9 +283,9 @@ export default function VoidMaze({ onScore }) {
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
-            g.flashTimer = 4;
-          } else { p.y = 0; }
-        } else if (p.y > H + 8) {
+            g.flashTimer = 4; exited = true;
+          } else { ny = 0; }
+        } else if (ny + PH > H + 8) {
           if (g.roomPos.y < g.cfg.roomsY - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -311,8 +293,28 @@ export default function VoidMaze({ onScore }) {
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
-            g.flashTimer = 4;
-          } else { p.y = H - PH; p.vy = 0; }
+            g.flashTimer = 4; exited = true;
+          } else { ny = H - PH; p.vy = 0; }
+        }
+
+        if (!exited) {
+          if (collides(g.grid, nx, p.y)) {
+            if (p.vx > 0) nx = Math.floor((nx + PW) / TILE) * TILE - PW;
+            else nx = Math.ceil(nx / TILE) * TILE;
+            p.vx = 0;
+          }
+          p.x = nx;
+
+          if (collides(g.grid, p.x, ny)) {
+            if (p.vy > 0) {
+              ny = Math.floor((ny + PH) / TILE) * TILE - PH;
+              g.grounded = true;
+            } else {
+              ny = Math.ceil(ny / TILE) * TILE;
+            }
+            p.vy = 0;
+          }
+          p.y = ny;
         }
 
         const px = Math.floor((p.x + PW / 2) / TILE);
