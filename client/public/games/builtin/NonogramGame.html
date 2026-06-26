@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nonogram</title><style>
-body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',sans-serif;text-align:center}
-.game{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;position:relative;user-select:none}
-.controls{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;justify-content:center;min-height:100dvh;font-family:'Segoe UI',sans-serif;text-align:center}
+.game{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;min-height:100dvh;user-select:none}
+.controls{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;justify-content:center}
 .controls label{font-size:13px;color:#aaa}
 .controls input[type=range]{width:100px;accent-color:#3388ee}
 .controls .val{font-size:14px;font-weight:700;color:#eee;min-width:50px}
@@ -16,15 +16,12 @@ body{margin:0;background:#0a0a0f;color:#e0e0f0;display:flex;align-items:center;j
 .info{font-size:13px;color:#aaa;margin-top:8px}
 .info span{margin:0 8px}
 .hint{font-size:12px;color:#6666aa}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;z-index:100;padding-top:80px}
-.overlay h2{font-size:24px;color:#ff00aa;text-shadow:0 0 10px #ff00aa;margin:0}
-.overlay p{font-size:18px;margin:4px 0}
-.overlay button{background:#ff00aa;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700}
-.overlay button:hover{box-shadow:0 0 10px #ff00aa}
 </style></head><body><div class="game" id="game"><div class="controls"><label>Size:</label><input type="range" id="sizeRange" min="5" max="25" value="10"><span class="val" id="sizeLabel">10×10</span><span id="patternName" style="font-size:13px;color:#ff00aa;font-weight:600"></span><button id="newBtn">New</button><button id="resetBtn">Reset</button></div><div class="grid" id="grid"></div><div class="info"><span id="timer">00:00</span><span id="filled">0/100</span></div><div class="hint">Left click to fill · Right click to mark ✕</div></div>
 <script>
-var size=10,solution=initGrid(10),grid=initGrid(10),won=false,startTime=Date.now(),elapsed=0,patternName='',patternNameEl=document.getElementById('patternName');
+var size=10,solution=initGrid(10),grid=initGrid(10),won=false,startTime=Date.now(),elapsed=0,patternName='',patternNameEl=document.getElementById('patternName'),vp=0;
 var sizeRange=document.getElementById('sizeRange'),sizeLabel=document.getElementById('sizeLabel'),gridEl=document.getElementById('grid'),timerEl=document.getElementById('timer'),filledEl=document.getElementById('filled'),gameEl=document.getElementById('game');
+function updateVp(){vp=Math.min(window.innerWidth-80,window.innerHeight-120,800)}
+window.addEventListener('resize',updateVp);
 function initGrid(s){return Array.from({length:s},function(){return Array(s).fill(0)})}
 var PATTERNS=[{name:'Heart',rows:['.#.#.','#####','#####','.###.','..#..']},{name:'Target',rows:['.###.','#####','##.##','#####','.###.']},{name:'Plus',rows:['..#..','..#..','#####','..#..','..#..']},{name:'Diamond',rows:['..#..','.###.','#####','.###.','..#..']},{name:'Smiley',rows:['.####.','##..##','#.##.#','#....#','##..##','.####.']},{name:'Arrow',rows:['..#..','.###.','#####','..#..','..#..','..#..']},{name:'Pacman',rows:['..#####..','.##...##.','##.....##','##.......','##.......','##.....##','.##...##.','..#####..']},{name:'Skull',rows:['...###...','..#####..','.##.#.##.','#########','##.#.#.##','##.....##','.##...##.','..#####..','...###...']},{name:'Zigzag',rows:['#####.','....#.','...#..','..#...','.#....','.#####']},{name:'Cat',rows:['.##.##.','#######','##.#.##','#.....#','.#####.','..#.#..']}];
 function parsePattern(p){return{name:p.name,h:p.rows.length,w:p.rows[0].length,data:p.rows.map(function(r){return r.split('').map(function(ch){return ch==='#'?1:0})})}}
@@ -32,18 +29,17 @@ function generateGrid(s){var pool=PATTERNS.map(parsePattern).filter(function(p){
 function getClues(sol){var si=sol.length,rowClues=sol.map(function(row){var c=[],n=0,i;for(i=0;i<row.length;i++){if(row[i])n++;else if(n){c.push(n);n=0}}if(n)c.push(n);return c.length?c:[0]}),colClues=[],r,c;for(c=0;c<si;c++){var clue=[],n=0;for(r=0;r<si;r++){if(sol[r][c])n++;else if(n){clue.push(n);n=0}}if(n)clue.push(n);colClues.push(clue.length?clue:[0])}return{rowClues:rowClues,colClues:colClues}}
 function checkWin(g){for(var r=0;r<size;r++)for(var c=0;c<size;c++){if(solution[r][c]===1&&g[r][c]!==1)return false;if(solution[r][c]===0&&g[r][c]===1)return false}return true}
 function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function newPuzzle(s){var res=generateGrid(s);solution=res.grid;patternName=res.name;grid=initGrid(s);won=false;startTime=Date.now();elapsed=0;removeOverlay();render()}
-function render(){var clues=getClues(solution),maxRowLen=1,i;for(i=0;i<clues.rowClues.length;i++)maxRowLen=Math.max(maxRowLen,clues.rowClues[i].length);var maxColLen=1;for(i=0;i<clues.colClues.length;i++)maxColLen=Math.max(maxColLen,clues.colClues[i].length);var cellSize=Math.max(16,Math.min(40,Math.floor(340/size))),clueCellW=size<=12?22:size<=18?17:13,clueCellH=size<=12?20:size<=18?15:12,clueFont=size<=12?12:size<=18?10:8;
+function newPuzzle(s){var res=generateGrid(s);solution=res.grid;patternName=res.name;grid=initGrid(s);won=false;startTime=Date.now();elapsed=0;render()}
+function render(){var clues=getClues(solution),maxRowLen=1,i;for(i=0;i<clues.rowClues.length;i++)maxRowLen=Math.max(maxRowLen,clues.rowClues[i].length);var maxColLen=1;for(i=0;i<clues.colClues.length;i++)maxColLen=Math.max(maxColLen,clues.colClues[i].length);updateVp();var cellSize=Math.max(18,Math.min(50,Math.floor(vp/(size+1)))),clueCellW=size<=15?Math.max(16,Math.floor(cellSize*0.6)):Math.max(12,Math.floor(cellSize*0.45)),clueCellH=size<=15?Math.max(14,Math.floor(cellSize*0.55)):Math.max(10,Math.floor(cellSize*0.4)),clueFont=Math.max(8,clueCellH-4);
 var rowDone=[],colDone=[],r,c;for(r=0;r<size;r++){var ok=true;for(c=0;c<size;c++){if(solution[r][c]===1&&grid[r][c]!==1)ok=false;if(solution[r][c]===0&&grid[r][c]===1)ok=false}rowDone[r]=ok}for(c=0;c<size;c++){ok=true;for(r=0;r<size;r++){if(solution[r][c]===1&&grid[r][c]!==1)ok=false;if(solution[r][c]===0&&grid[r][c]===1)ok=false}colDone[c]=ok}
 function clueColor(ri,ci,v){if(ci!==undefined&&colDone[ci])return'#4caf50';if(ri!==undefined&&rowDone[ri])return'#4caf50';return v===0?'#444':'#6af'}
 var html='';html+='<div class="cell corner" style="grid-row:1;grid-column:1"></div>';
 for(c=0;c<size;c++){html+='<div class="cell clue-v" style="grid-row:1;grid-column:'+(c+2)+';display:flex;flex-direction:column;justify-content:flex-end;width:'+cellSize+'px;background:#12122a">';var clue=clues.colClues[c];for(i=0;i<maxColLen-clue.length;i++)html+='<div style="height:'+clueCellH+'px"></div>';for(i=0;i<clue.length;i++)html+='<div style="height:'+clueCellH+'px;display:flex;align-items:center;justify-content:center;font-size:'+(clue[i]===0?clueFont-2:clueFont)+'px;font-weight:700;color:'+clueColor(undefined,c,clue[i])+';line-height:1;width:'+clueCellW+'px">'+clue[i]+'</div>';html+='</div>'}
 for(r=0;r<size;r++){html+='<div class="cell clue-h" style="grid-row:'+(r+2)+';grid-column:1;display:flex;flex-direction:row;justify-content:flex-end;height:'+cellSize+'px;background:#12122a">';var clue=clues.rowClues[r];for(i=0;i<maxRowLen-clue.length;i++)html+='<div style="width:'+clueCellW+'px"></div>';for(i=0;i<clue.length;i++)html+='<div style="width:'+clueCellW+'px;display:flex;align-items:center;justify-content:center;font-size:'+(clue[i]===0?clueFont-2:clueFont)+'px;font-weight:700;color:'+clueColor(r,undefined,clue[i])+';line-height:1">'+clue[i]+'</div>';html+='</div>';for(c=0;c<size;c++){var bg='#0d0d20';if(grid[r][c]===1)bg='#3388ee';html+='<div class="cell data" style="grid-row:'+(r+2)+';grid-column:'+(c+2)+';width:'+cellSize+'px;height:'+cellSize+'px;background:'+bg+';font-size:'+Math.max(8,cellSize-6)+'px;color:#ff5555" data-r="'+r+'" data-c="'+c+'">'+(grid[r][c]===-1?'✕':'')+'</div>'}}
 gridEl.innerHTML=html;gridEl.style.gridTemplateColumns=maxRowLen*clueCellW+'px repeat('+size+','+cellSize+'px)';gridEl.style.gridTemplateRows=maxColLen*clueCellH+'px repeat('+size+','+cellSize+'px)';sizeLabel.textContent=size+'×'+size;patternNameEl.textContent=patternName;var filled=grid.flat().filter(function(v){return v===1}).length;filledEl.textContent='■ '+filled+'/'+(size*size)}
-function removeOverlay(){var o=document.getElementById('overlay');if(o)o.remove()}
-function handleCellClick(e){if(won)return;var t=e.target;if(!t.dataset||t.dataset.r===undefined)return;var r=+t.dataset.r,c=+t.dataset.c;if(grid[r][c]===1)grid[r][c]=0;else grid[r][c]=1;if(checkWin(grid)){won=true;elapsed=Math.floor((Date.now()-startTime)/1000);removeOverlay();var o=document.createElement('div');o.className='overlay';o.id='overlay';o.innerHTML='<h2>Puzzle Complete!</h2><p>Time: '+fmt(elapsed)+'</p><button onclick="newPuzzle(size)">New Puzzle</button>';gameEl.appendChild(o)}render()}
+function handleCellClick(e){if(won)return;var t=e.target;if(!t.dataset||t.dataset.r===undefined)return;var r=+t.dataset.r,c=+t.dataset.c;if(grid[r][c]===1)grid[r][c]=0;else grid[r][c]=1;if(checkWin(grid)){won=true;elapsed=Math.floor((Date.now()-startTime)/1000);setTimeout(function(){alert('Puzzle Complete!\nTime: '+fmt(elapsed))},50)}render()}
 function handleRightClick(e){e.preventDefault();if(won)return;var t=e.target;if(!t.dataset||t.dataset.r===undefined)return;var r=+t.dataset.r,c=+t.dataset.c;if(grid[r][c]===-1)grid[r][c]=0;else if(grid[r][c]===1)grid[r][c]=-1;else grid[r][c]=-1;render()}
-function restart(){grid=initGrid(size);won=false;startTime=Date.now();elapsed=0;removeOverlay();render()}
+function restart(){grid=initGrid(size);won=false;startTime=Date.now();elapsed=0;render()}
 gridEl.addEventListener('click',handleCellClick);gridEl.addEventListener('contextmenu',handleRightClick);
 sizeRange.addEventListener('input',function(){size=+this.value;newPuzzle(size)});
 document.getElementById('newBtn').addEventListener('click',function(){newPuzzle(size)});

@@ -204,6 +204,12 @@ export default function NonogramGame({ onScore }) {
     return () => clearInterval(id);
   }, [won, size, solution]);
 
+  useEffect(() => {
+    if (won) {
+      setTimeout(() => alert(`Puzzle Complete!\nTime: ${fmt(elapsed)}`), 50);
+    }
+  }, [won, elapsed]);
+
   const newPuzzle = useCallback((s) => {
     const { grid: sol, name } = generateGrid(s);
     solutionRef.current = sol;
@@ -257,17 +263,26 @@ export default function NonogramGame({ onScore }) {
     });
   };
 
-  const cellSize = Math.max(16, Math.min(40, Math.floor(340 / size)));
-  const clueCellW = size <= 12 ? 22 : size <= 18 ? 17 : 13;
-  const clueCellH = size <= 12 ? 20 : size <= 18 ? 15 : 12;
-  const clueFont = size <= 12 ? 12 : size <= 18 ? 10 : 8;
+  const [vp, setVp] = useState(() => Math.min(window.innerWidth - 80, window.innerHeight - 120, 800));
+  useEffect(() => {
+    const onResize = () => setVp(Math.min(window.innerWidth - 80, window.innerHeight - 120, 800));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const cellSize = Math.max(18, Math.min(50, Math.floor(vp / (size + 1))));
+  const clueCellW = size <= 15 ? Math.max(16, Math.floor(cellSize * 0.6)) : Math.max(12, Math.floor(cellSize * 0.45));
+  const clueCellH = size <= 15 ? Math.max(14, Math.floor(cellSize * 0.55)) : Math.max(10, Math.floor(cellSize * 0.4));
+  const clueFont = Math.max(8, clueCellH - 4);
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const filled = grid.flat().filter(c => c === 1).length;
 
   return (
-    <div className="builtin-game" style={{ userSelect: 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+    <div style={{
+      minHeight: '100dvh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', padding: 12, userSelect: 'none',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
         <span style={{ fontSize: 13, color: '#aaa' }}>Size:</span>
         <input type="range" min="5" max="25" value={size}
           onChange={e => handleSizeChange(Number(e.target.value))}
@@ -371,16 +386,6 @@ export default function NonogramGame({ onScore }) {
       </div>
 
       <div className="game-controls-hint">Left click to fill  ·  Right click to mark ✕</div>
-
-      {won && (
-        <div className="game-overlay">
-          <h2>Puzzle Complete!</h2>
-          <p>Time: {fmt(elapsed)}</p>
-          <button className="btn-primary" onClick={() => newPuzzle(size)}>
-            New Puzzle 🎲
-          </button>
-        </div>
-      )}
     </div>
   );
 }
