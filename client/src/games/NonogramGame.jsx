@@ -1,91 +1,83 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 const PATTERNS = [
-  { name: 'Heart', rows: [
-    '.#.#.',
-    '#####',
-    '#####',
-    '.###.',
-    '..#..',
-  ]},
-  { name: 'Target', rows: [
-    '.###.',
-    '#####',
-    '##.##',
-    '#####',
-    '.###.',
-  ]},
-  { name: 'Plus', rows: [
-    '..#..',
-    '..#..',
-    '#####',
-    '..#..',
-    '..#..',
-  ]},
-  { name: 'Diamond', rows: [
-    '..#..',
-    '.###.',
-    '#####',
-    '.###.',
-    '..#..',
-  ]},
-  { name: 'Smiley', rows: [
-    '.####.',
-    '##..##',
-    '#.##.#',
-    '#....#',
-    '##..##',
-    '.####.',
-  ]},
-  { name: 'Arrow', rows: [
-    '..#..',
-    '.###.',
-    '#####',
-    '..#..',
-    '..#..',
-    '..#..',
-  ]},
-  { name: 'Pacman', rows: [
-    '..#####..',
-    '.##...##.',
-    '##.....##',
-    '##.......',
-    '##.......',
-    '##.....##',
-    '.##...##.',
-    '..#####..',
-  ]},
-  { name: 'Skull', rows: [
-    '...###...',
-    '..#####..',
-    '.##.#.##.',
-    '#########',
-    '##.#.#.##',
-    '##.....##',
-    '.##...##.',
-    '..#####..',
-    '...###...',
-  ]},
-  { name: 'Zigzag', rows: [
-    '#####.',
-    '....#.',
-    '...#..',
-    '..#...',
-    '.#....',
-    '.#####',
-  ]},
-  { name: 'Cat', rows: [
+  { rows: [
     '.##.##.',
     '#######',
-    '##.#.##',
+    '.#####.',
+    '..###..',
+    '...#...',
+  ]},
+  { rows: [
+    '.###.',
+    '#...#',
+    '#.#.#',
+    '#...#',
+    '.###.',
+  ]},
+  { rows: [
+    '..#..',
+    '..#..',
+    '#####',
+    '..#..',
+    '..#..',
+  ]},
+  { rows: [
+    '..#..',
+    '.###.',
+    '#####',
+    '.###.',
+    '..#..',
+  ]},
+  { rows: [
+    '..###..',
+    '.#...#.',
+    '#.#.#.#',
+    '#.....#',
+    '#.###.#',
+    '.#...#.',
+  ]},
+  { rows: [
+    '..#..',
+    '.###.',
+    '#####',
+    '..#..',
+    '..#..',
+    '..#..',
+  ]},
+  { rows: [
+    '..#####..',
+    '.##...##.',
+    '##.....##',
+    '##.......',
+    '##.......',
+    '##.....##',
+    '.##...##.',
+    '..#####..',
+  ]},
+  { rows: [
+    '...###...',
+    '..#####..',
+    '.##...##.',
+    '##.#.#.##',
+    '##.....##',
+    '##.#.#.##',
+    '.##...##.',
+    '..#####..',
+    '...###...',
+  ]},
+  { rows: [
+    '.##.##.',
+    '#######',
+    '##...##',
+    '#.#.#.#',
     '#.....#',
     '.#####.',
-    '..#.#..',
   ]},
 ];
 
 function parsePattern(p) {
-  return { name: p.name, h: p.rows.length, w: p.rows[0].length, data: p.rows.map(r => [...r].map(ch => ch === '#' ? 1 : 0)) };
+  return { h: p.rows.length, w: p.rows[0].length, data: p.rows.map(r => [...r].map(ch => ch === '#' ? 1 : 0)) };
 }
 
 function generateGrid(size) {
@@ -141,7 +133,7 @@ function generateGrid(size) {
       }
     }
   }
-  return { grid: g, name: pat.name };
+  return { grid: g };
 }
 
 function getClues(solution) {
@@ -168,14 +160,12 @@ function initGrid(size) {
 
 export default function NonogramGame({ onScore }) {
   const [size, setSize] = useState(10);
-  const initRes = useMemo(() => generateGrid(10), []);
-  const [solution, setSolution] = useState(() => initRes.grid);
+  const [solution, setSolution] = useState(() => generateGrid(10).grid);
   const [grid, setGrid] = useState(() => initGrid(10));
   const [won, setWon] = useState(false);
   const startRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
   const solutionRef = useRef(solution);
-  const [patternName, setPatternName] = useState(() => initRes.name);
 
   const { rowClues, colClues } = useMemo(() => getClues(solution), [solution]);
   const maxRowLen = Math.max(...rowClues.map(c => c.length), 1);
@@ -211,14 +201,13 @@ export default function NonogramGame({ onScore }) {
   }, [won, elapsed]);
 
   const newPuzzle = useCallback((s) => {
-    const { grid: sol, name } = generateGrid(s);
+    const { grid: sol } = generateGrid(s);
     solutionRef.current = sol;
     setSolution(sol);
     setGrid(initGrid(s));
     setWon(false);
     startRef.current = Date.now();
     setElapsed(0);
-    setPatternName(name);
   }, []);
 
   const handleSizeChange = (s) => {
@@ -288,7 +277,6 @@ export default function NonogramGame({ onScore }) {
           onChange={e => handleSizeChange(Number(e.target.value))}
           style={{ width: 100, accentColor: '#3388ee' }} />
         <span style={{ fontSize: 14, fontWeight: 700, color: '#eee', minWidth: 50 }}>{size}×{size}</span>
-        <span style={{ fontSize: 13, color: '#ff00aa', fontWeight: 600 }}>{patternName}</span>
         <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
           onClick={() => newPuzzle(size)}>🎲 New</button>
         <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
