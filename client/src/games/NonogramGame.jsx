@@ -59,6 +59,21 @@ export default function NonogramGame({ onScore }) {
   const maxRowLen = Math.max(...rowClues.map(c => c.length), 1);
   const maxColLen = Math.max(...colClues.map(c => c.length), 1);
 
+  const rowDone = useMemo(() => {
+    const sol = solutionRef.current;
+    return grid.map((row, r) => row.every((cell, c) =>
+      sol[r][c] === 1 ? cell === 1 : cell !== 1
+    ));
+  }, [grid]);
+  const colDone = useMemo(() => {
+    const sol = solutionRef.current;
+    return Array.from({ length: size }, (_, c) =>
+      grid.every((row, r) =>
+        sol[r][c] === 1 ? row[c] === 1 : row[c] !== 1
+      )
+    );
+  }, [grid, size]);
+
   useEffect(() => {
     if (won) return;
     const id = setInterval(() => {
@@ -171,7 +186,7 @@ export default function NonogramGame({ onScore }) {
               <div key={i} style={{
                 height: clueCellH, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: v === 0 ? clueFont - 2 : clueFont, fontWeight: 700,
-                color: v === 0 ? '#444' : '#6af',
+                color: colDone[ci] ? '#4caf50' : v === 0 ? '#444' : '#6af',
                 lineHeight: 1,
               }}>{v}</div>
             ))}
@@ -192,7 +207,7 @@ export default function NonogramGame({ onScore }) {
               <div key={i} style={{
                 width: clueCellW, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: v === 0 ? clueFont - 2 : clueFont, fontWeight: 700,
-                color: v === 0 ? '#444' : '#6af',
+                color: rowDone[ri] ? '#4caf50' : v === 0 ? '#444' : '#6af',
                 lineHeight: 1,
               }}>{v}</div>
             ))}
