@@ -7,18 +7,20 @@ function clueCount(arr) {
 }
 
 function squeeze(arr, max) {
-  while (clueCount(arr) > max) {
-    let best = -1, bestLen = Infinity, inGap = false, start = 0;
+  while (true) {
+    const runs = [];
+    let inRun = false, start = 0;
     for (let i = 0; i <= arr.length; i++) {
-      if (i < arr.length && !arr[i] && i > 0 && arr[i - 1] && !inGap) { inGap = true; start = i; }
-      else if ((i === arr.length || arr[i]) && inGap && i < arr.length && arr[i]) {
-        const len = i - start;
-        if (len < bestLen) { bestLen = len; best = start; }
-        inGap = false;
-      }
+      if (i < arr.length && arr[i] && !inRun) { inRun = true; start = i; }
+      else if ((i === arr.length || !arr[i]) && inRun) { runs.push([start, i - 1]); inRun = false; }
     }
-    if (best < 0) break;
-    for (let i = best; i < best + bestLen; i++) arr[i] = 1;
+    if (runs.length <= max) break;
+    let best = 0, bestDist = Infinity;
+    for (let i = 0; i < runs.length - 1; i++) {
+      const dist = runs[i + 1][0] - runs[i][1] - 1;
+      if (dist < bestDist) { bestDist = dist; best = i; }
+    }
+    for (let i = runs[best][1] + 1; i < runs[best + 1][0]; i++) arr[i] = 1;
   }
 }
 
@@ -41,11 +43,17 @@ function generateGrid(size) {
     if (f === size) g[Math.random() * size | 0][c] = 0;
   }
   if (maxC < 99) {
-    for (let r = 0; r < size; r++) squeeze(g[r], maxC);
-    for (let c = 0; c < size; c++) {
-      const col = g.map(row => row[c]);
-      squeeze(col, maxC);
-      for (let r = 0; r < size; r++) g[r][c] = col[r];
+    let dirty = true;
+    while (dirty) {
+      dirty = false;
+      for (let r = 0; r < size; r++) { const b = clueCount(g[r]); squeeze(g[r], maxC); if (clueCount(g[r]) !== b) dirty = true; }
+      for (let c = 0; c < size; c++) {
+        const col = g.map(row => row[c]);
+        const b = clueCount(col);
+        squeeze(col, maxC);
+        if (clueCount(col) !== b) dirty = true;
+        for (let r = 0; r < size; r++) g[r][c] = col[r];
+      }
     }
   }
   return g;

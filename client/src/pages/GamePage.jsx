@@ -153,6 +153,11 @@ export default function GamePage() {
           {game.tags?.map(t => <span key={t} className="tag">{t}</span>)}
           {isNebula && <span className="tag" style={{ borderColor: 'var(--cyan)', color: 'var(--cyan)' }}>NEBULA CDN</span>}
         </div>
+        {(game.embedUrl?.startsWith('/games/') || game.embedUrl?.startsWith('/nebula/')) && (
+          <a href={`/api/games/${gameSlug}/download`} className="btn-download" target="_blank" rel="noopener noreferrer">
+            ⬇ Download Game
+          </a>
+        )}
         {user && !reportSent && (
           <button className="btn-report" onClick={handleReport} style={{ marginTop: '1rem' }}>Report Broken</button>
         )}
