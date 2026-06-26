@@ -1,11 +1,107 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+const PATTERNS = [
+  { name: 'Heart', rows: [
+    '.#.#.',
+    '#####',
+    '#####',
+    '.###.',
+    '..#..',
+  ]},
+  { name: 'Target', rows: [
+    '.###.',
+    '#####',
+    '##.##',
+    '#####',
+    '.###.',
+  ]},
+  { name: 'Plus', rows: [
+    '..#..',
+    '..#..',
+    '#####',
+    '..#..',
+    '..#..',
+  ]},
+  { name: 'Diamond', rows: [
+    '..#..',
+    '.###.',
+    '#####',
+    '.###.',
+    '..#..',
+  ]},
+  { name: 'Smiley', rows: [
+    '.####.',
+    '##..##',
+    '#.##.#',
+    '#....#',
+    '##..##',
+    '.####.',
+  ]},
+  { name: 'Arrow', rows: [
+    '..#..',
+    '.###.',
+    '#####',
+    '..#..',
+    '..#..',
+    '..#..',
+  ]},
+  { name: 'Pacman', rows: [
+    '..#####..',
+    '.##...##.',
+    '##.....##',
+    '##.......',
+    '##.......',
+    '##.....##',
+    '.##...##.',
+    '..#####..',
+  ]},
+  { name: 'Skull', rows: [
+    '...###...',
+    '..#####..',
+    '.##.#.##.',
+    '#########',
+    '##.#.#.##',
+    '##.....##',
+    '.##...##.',
+    '..#####..',
+    '...###...',
+  ]},
+  { name: 'Zigzag', rows: [
+    '#####.',
+    '....#.',
+    '...#..',
+    '..#...',
+    '.#....',
+    '.#####',
+  ]},
+  { name: 'Cat', rows: [
+    '.##.##.',
+    '#######',
+    '##.#.##',
+    '#.....#',
+    '.#####.',
+    '..#.#..',
+  ]},
+];
+
+function parsePattern(p) {
+  return { name: p.name, h: p.rows.length, w: p.rows[0].length, data: p.rows.map(r => [...r].map(ch => ch === '#' ? 1 : 0)) };
+}
+
 function generateGrid(size) {
-  const d = size <= 5 ? 0.4 : size <= 10 ? 0.35 : size <= 15 ? 0.3 : size <= 20 ? 0.28 : 0.25;
+  const pool = PATTERNS.map(parsePattern).filter(p => p.h <= size && p.w <= size);
+  const pat = pool[Math.random() * pool.length | 0];
   const g = Array.from({ length: size }, () => Array(size).fill(0));
+  const ro = (size - pat.h) >> 1, co = (size - pat.w) >> 1;
+  for (let r = 0; r < pat.h; r++)
+    for (let c = 0; c < pat.w; c++)
+      g[ro + r][co + c] = pat.data[r][c];
+
+  const noiseD = size <= 8 ? 0.12 : size <= 14 ? 0.10 : 0.08;
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
-      g[r][c] = Math.random() < d ? 1 : 0;
+      if (g[r][c] === 0 && Math.random() < noiseD) g[r][c] = 1;
+
   for (let r = 0; r < size; r++) {
     const f = g[r].filter(v => v).length;
     if (f === 0) g[r][Math.random() * size | 0] = 1;
@@ -17,32 +113,23 @@ function generateGrid(size) {
     if (f === 0) g[Math.random() * size | 0][c] = 1;
     if (f === size) g[Math.random() * size | 0][c] = 0;
   }
-  const bigRow = Math.random() * size | 0;
-  const bigLen = Math.floor(size * (0.55 + Math.random() * 0.3));
-  const bigStart = Math.random() * (size - bigLen) | 0;
-  for (let c = bigStart; c < bigStart + bigLen; c++) g[bigRow][c] = 1;
 
   function clueGroups(arr) {
     const groups = []; let i = 0; const n = arr.length;
     while (i < n) { while (i < n && !arr[i]) i++; if (i >= n) break; const s = i; while (i < n && arr[i]) i++; groups.push([s, i]); }
     return groups;
   }
-
   function gapsBetween(groups) {
     const gaps = [];
     for (let i = 1; i < groups.length; i++) gaps.push([groups[i - 1][1], groups[i][0]]);
     return gaps;
   }
-
   for (let iter = 0; iter < 2; iter++) {
     for (let r = 0; r < size; r++) {
       const groups = clueGroups(g[r]);
       if (groups.length >= 4) {
         const gaps = gapsBetween(groups);
-        if (gaps.length) {
-          const [lo, hi] = gaps[Math.random() * gaps.length | 0];
-          for (let c = lo; c < hi; c++) g[r][c] = 1;
-        }
+        if (gaps.length) { const [lo, hi] = gaps[Math.random() * gaps.length | 0]; for (let c = lo; c < hi; c++) g[r][c] = 1; }
       }
     }
     for (let c = 0; c < size; c++) {
@@ -50,14 +137,11 @@ function generateGrid(size) {
       const groups = clueGroups(col);
       if (groups.length >= 4) {
         const gaps = gapsBetween(groups);
-        if (gaps.length) {
-          const [lo, hi] = gaps[Math.random() * gaps.length | 0];
-          for (let r = lo; r < hi; r++) g[r][c] = 1;
-        }
+        if (gaps.length) { const [lo, hi] = gaps[Math.random() * gaps.length | 0]; for (let r = lo; r < hi; r++) g[r][c] = 1; }
       }
     }
   }
-  return g;
+  return { grid: g, name: pat.name };
 }
 
 function getClues(solution) {
@@ -84,12 +168,14 @@ function initGrid(size) {
 
 export default function NonogramGame({ onScore }) {
   const [size, setSize] = useState(10);
-  const [solution, setSolution] = useState(() => generateGrid(10));
+  const initRes = useMemo(() => generateGrid(10), []);
+  const [solution, setSolution] = useState(() => initRes.grid);
   const [grid, setGrid] = useState(() => initGrid(10));
   const [won, setWon] = useState(false);
   const startRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
   const solutionRef = useRef(solution);
+  const [patternName, setPatternName] = useState(() => initRes.name);
 
   const { rowClues, colClues } = useMemo(() => getClues(solution), [solution]);
   const maxRowLen = Math.max(...rowClues.map(c => c.length), 1);
@@ -119,13 +205,14 @@ export default function NonogramGame({ onScore }) {
   }, [won, size, solution]);
 
   const newPuzzle = useCallback((s) => {
-    const sol = generateGrid(s);
+    const { grid: sol, name } = generateGrid(s);
     solutionRef.current = sol;
     setSolution(sol);
     setGrid(initGrid(s));
     setWon(false);
     startRef.current = Date.now();
     setElapsed(0);
+    setPatternName(name);
   }, []);
 
   const handleSizeChange = (s) => {
@@ -186,6 +273,7 @@ export default function NonogramGame({ onScore }) {
           onChange={e => handleSizeChange(Number(e.target.value))}
           style={{ width: 100, accentColor: '#3388ee' }} />
         <span style={{ fontSize: 14, fontWeight: 700, color: '#eee', minWidth: 50 }}>{size}×{size}</span>
+        <span style={{ fontSize: 13, color: '#ff00aa', fontWeight: 600 }}>{patternName}</span>
         <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
           onClick={() => newPuzzle(size)}>🎲 New</button>
         <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
