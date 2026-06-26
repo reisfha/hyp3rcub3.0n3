@@ -12,26 +12,26 @@ const PW = 18;
 const PH = 34;
 
 const LEVELS = [
-  { roomsX: 2, roomsY: 4, layers: 2, seed: 1 },
-  { roomsX: 2, roomsY: 4, layers: 2, seed: 2 },
-  { roomsX: 2, roomsY: 4, layers: 3, seed: 3 },
-  { roomsX: 2, roomsY: 4, layers: 3, seed: 4 },
-  { roomsX: 3, roomsY: 4, layers: 3, seed: 5 },
-  { roomsX: 3, roomsY: 4, layers: 3, seed: 6 },
-  { roomsX: 3, roomsY: 4, layers: 4, seed: 7 },
-  { roomsX: 3, roomsY: 4, layers: 4, seed: 8 },
-  { roomsX: 3, roomsY: 5, layers: 4, seed: 9 },
-  { roomsX: 3, roomsY: 5, layers: 4, seed: 10 },
-  { roomsX: 4, roomsY: 4, layers: 4, seed: 11 },
-  { roomsX: 4, roomsY: 4, layers: 4, seed: 12 },
-  { roomsX: 4, roomsY: 5, layers: 4, seed: 13 },
-  { roomsX: 4, roomsY: 5, layers: 4, seed: 14 },
-  { roomsX: 4, roomsY: 5, layers: 5, seed: 15 },
-  { roomsX: 4, roomsY: 5, layers: 5, seed: 16 },
-  { roomsX: 4, roomsY: 5, layers: 5, seed: 17 },
-  { roomsX: 4, roomsY: 6, layers: 5, seed: 18 },
-  { roomsX: 4, roomsY: 6, layers: 5, seed: 19 },
-  { roomsX: 5, roomsY: 5, layers: 6, seed: 20 },
+  { roomsX: 2, roomsY: 4, layers: 2, seed: 1, shiftInterval: 8000 },
+  { roomsX: 2, roomsY: 4, layers: 2, seed: 2, shiftInterval: 7000 },
+  { roomsX: 2, roomsY: 4, layers: 3, seed: 3, shiftInterval: 6500 },
+  { roomsX: 2, roomsY: 4, layers: 3, seed: 4, shiftInterval: 6000 },
+  { roomsX: 3, roomsY: 4, layers: 3, seed: 5, shiftInterval: 5500 },
+  { roomsX: 3, roomsY: 4, layers: 3, seed: 6, shiftInterval: 5000 },
+  { roomsX: 3, roomsY: 4, layers: 4, seed: 7, shiftInterval: 4500 },
+  { roomsX: 3, roomsY: 4, layers: 4, seed: 8, shiftInterval: 4000 },
+  { roomsX: 3, roomsY: 5, layers: 4, seed: 9, shiftInterval: 3800 },
+  { roomsX: 3, roomsY: 5, layers: 4, seed: 10, shiftInterval: 3500 },
+  { roomsX: 4, roomsY: 4, layers: 4, seed: 11, shiftInterval: 3200 },
+  { roomsX: 4, roomsY: 4, layers: 4, seed: 12, shiftInterval: 3000 },
+  { roomsX: 4, roomsY: 5, layers: 4, seed: 13, shiftInterval: 2800 },
+  { roomsX: 4, roomsY: 5, layers: 4, seed: 14, shiftInterval: 2500 },
+  { roomsX: 4, roomsY: 5, layers: 5, seed: 15, shiftInterval: 2200 },
+  { roomsX: 4, roomsY: 5, layers: 5, seed: 16, shiftInterval: 2000 },
+  { roomsX: 4, roomsY: 5, layers: 5, seed: 17, shiftInterval: 1800 },
+  { roomsX: 4, roomsY: 6, layers: 5, seed: 18, shiftInterval: 1500 },
+  { roomsX: 4, roomsY: 6, layers: 5, seed: 19, shiftInterval: 1200 },
+  { roomsX: 5, roomsY: 5, layers: 6, seed: 20, shiftInterval: 1000 },
 ];
 
 function mulberry32(seed) {
@@ -57,40 +57,28 @@ function generateRoom(seed, hasExit, edges) {
   const rng = mulberry32(seed);
   const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
-  for (let x = 0; x < COLS; x++) {
-    if (edges.bottom) {
-      if (rng() > 0.75) grid[ROWS - 1][x] = 1;
-    } else {
-      grid[ROWS - 1][x] = 1;
-    }
-  }
-  if (!edges.bottom) {
-    const g = Math.floor(rng() * (COLS - 2)) + 1;
+  for (let x = 0; x < COLS; x++) grid[ROWS - 1][x] = 1;
+  if (edges.bottom) {
+    const g = 1 + Math.floor(rng() * (COLS - 2));
     grid[ROWS - 1][g] = 0;
   }
 
+  for (let x = 0; x < COLS; x++) grid[0][x] = 1;
   if (edges.top) {
-    for (let x = 0; x < COLS; x++) {
-      if (rng() < 0.35) grid[0][x] = 1;
-    }
-  } else {
-    for (let x = 0; x < COLS; x++) grid[0][x] = 1;
+    const g = 1 + Math.floor(rng() * (COLS - 2));
+    grid[0][g] = 0;
   }
 
+  for (let y = 0; y < ROWS; y++) grid[y][0] = 1;
   if (edges.left) {
-    for (let y = 1; y < ROWS - 1; y++) {
-      if (rng() < 0.45) grid[y][0] = 1;
-    }
-  } else {
-    for (let y = 0; y < ROWS; y++) grid[y][0] = 1;
+    const g = 1 + Math.floor(rng() * (ROWS - 2));
+    grid[g][0] = 0;
   }
 
+  for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 1;
   if (edges.right) {
-    for (let y = 1; y < ROWS - 1; y++) {
-      if (rng() < 0.45) grid[y][COLS - 1] = 1;
-    }
-  } else {
-    for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 1;
+    const g = 1 + Math.floor(rng() * (ROWS - 2));
+    grid[g][COLS - 1] = 0;
   }
 
   const platCount = Math.floor(rng() * 4) + 2;
@@ -201,6 +189,7 @@ export default function VoidMaze({ onScore }) {
       grounded: true,
       grid,
       flashTimer: 0,
+      autoShiftTimer: cfg.shiftInterval,
     };
     forceUpdate();
   }, [forceUpdate]);
@@ -344,6 +333,18 @@ export default function VoidMaze({ onScore }) {
         if (px >= 0 && px < COLS && py >= 0 && py < ROWS && g.grid[py][px] === 2 && !g.lvlDone) {
           g.lvlDone = true;
           forceUpdate();
+        }
+
+        g.autoShiftTimer -= 16;
+        if (g.autoShiftTimer <= 0) {
+          g.autoShiftTimer = g.cfg.shiftInterval;
+          const allKeys = Object.keys(g.rooms);
+          const sk = allKeys[Math.floor(Math.random() * allKeys.length)];
+          g.currentLayers[sk] = (g.currentLayers[sk] + 1) % g.cfg.layers;
+          if (sk === `${g.roomPos.x},${g.roomPos.y}`) {
+            g.grid = g.rooms[sk][g.currentLayers[sk]];
+            g.flashTimer = 4;
+          }
         }
       }
 
