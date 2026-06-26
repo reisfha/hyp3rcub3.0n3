@@ -351,23 +351,45 @@ export async function onRequest(context) {
         }
 
         const embedUrl = game.embed_url || '';
-        if (embedUrl.startsWith('/games/') || embedUrl.startsWith('/nebula/')) {
-          const filename = embedUrl.split('/').pop() || 'game.html';
-          const fileUrl = embedUrl.startsWith('/games/')
-            ? new URL(embedUrl, url).toString()
-            : `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${embedUrl.replace('/nebula/', '')}`;
+        const gameTitle = game.title || 'Game';
 
-          const r = await fetch(fileUrl);
-          if (!r.ok) return json({ error: 'File not found' }, 404);
-          return new Response(r.body, {
-            headers: {
-              'Content-Type': r.headers.get('content-type') || 'application/octet-stream',
-              'Content-Disposition': `attachment; filename="${filename}"`
-            }
-          });
+        if (embedUrl) {
+          const filename = embedUrl.split('/').pop() || 'game.html';
+
+          if (embedUrl.startsWith('/games/') || embedUrl.startsWith('/nebula/')) {
+            const fileUrl = embedUrl.startsWith('/games/')
+              ? new URL(embedUrl, url).toString()
+              : `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${embedUrl.replace('/nebula/', '')}`;
+            const r = await fetch(fileUrl);
+            if (!r.ok) return json({ error: 'File not found' }, 404);
+            return new Response(r.body, {
+              headers: {
+                'Content-Type': r.headers.get('content-type') || 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${filename}"`
+              }
+            });
+          }
+
+          if (embedUrl.startsWith('http://') || embedUrl.startsWith('https://')) {
+            const r = await fetch(embedUrl, { signal: AbortSignal.timeout(10000) });
+            if (!r.ok) return json({ error: 'Failed to fetch external game' }, 502);
+            return new Response(r.body, {
+              headers: {
+                'Content-Type': r.headers.get('content-type') || 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${filename}"`
+              }
+            });
+          }
         }
 
-        return json({ error: 'No download available for this game' }, 400);
+        const safeName = gameTitle.replace(/[^a-zA-Z0-9 ]/g, '');
+        const fallbackHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${gameTitle}</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0a0a0f;color:#e0e0f0;text-align:center;padding:20px}h1{color:#00f0ff}a{color:#ff00aa}</style></head><body><h1>${gameTitle}</h1><p>This is a built-in game on Hyp3rCub3.0n3.</p><p>Play it online at <a href="${url.origin}/game/${game.slug}">${url.origin}/game/${game.slug}</a></p></body></html>`;
+        return new Response(fallbackHtml, {
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Content-Disposition': `attachment; filename="${safeName}.html"`
+          }
+        });
       }
 
       const game = await db.prepare('SELECT * FROM games WHERE slug = ?').bind(slug).first();

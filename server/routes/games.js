@@ -134,29 +134,43 @@ router.get('/:slug/download', async (req, res) => {
     if (!game) return res.status(404).json({ error: 'Game not found' });
 
     const embedUrl = game.embedUrl;
-    if (!embedUrl) return res.status(400).json({ error: 'No download available for this game' });
+    const gameTitle = game.title || 'Game';
 
-    const filename = path.basename(embedUrl);
+    if (embedUrl) {
+      const filename = path.basename(embedUrl);
 
-    if (embedUrl.startsWith('/games/')) {
-      const filePath = path.join(__dirname, '../../client/public', embedUrl);
-      if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      return res.sendFile(filePath);
+      if (embedUrl.startsWith('/games/')) {
+        const filePath = path.join(__dirname, '../../client/public', embedUrl);
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.sendFile(filePath);
+      }
+
+      if (embedUrl.startsWith('/nebula/')) {
+        const cdnPath = embedUrl.replace('/nebula/', '');
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${cdnPath}`;
+        const r = await fetch(cdnUrl);
+        if (!r.ok) return res.status(404).json({ error: 'File not found on CDN' });
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', r.headers.get('content-type') || 'application/octet-stream');
+        const buf = await r.arrayBuffer();
+        return res.send(Buffer.from(buf));
+      }
+
+      if (embedUrl.startsWith('http://') || embedUrl.startsWith('https://')) {
+        const r = await fetch(embedUrl, { signal: AbortSignal.timeout(10000) });
+        if (!r.ok) return res.status(502).json({ error: 'Failed to fetch external game' });
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', r.headers.get('content-type') || 'application/octet-stream');
+        const buf = await r.arrayBuffer();
+        return res.send(Buffer.from(buf));
+      }
     }
 
-    if (embedUrl.startsWith('/nebula/')) {
-      const cdnPath = embedUrl.replace('/nebula/', '');
-      const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${cdnPath}`;
-      const r = await fetch(cdnUrl);
-      if (!r.ok) return res.status(404).json({ error: 'File not found on CDN' });
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Content-Type', r.headers.get('content-type') || 'application/octet-stream');
-      const buf = await r.arrayBuffer();
-      return res.send(Buffer.from(buf));
-    }
-
-    return res.status(400).json({ error: 'No download available for this game' });
+    const fallbackHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${gameTitle}</title><style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0a0a0f;color:#e0e0f0;text-align:center;padding:20px}h1{color:#00f0ff}a{color:#ff00aa}</style></head><body><h1>${gameTitle}</h1><p>This is a built-in game on Hyp3rCub3.0n3.</p><p>Play it online at <a href="${req.protocol}://${req.get('host')}/game/${game.slug}">${req.protocol}://${req.get('host')}/game/${game.slug}</a></p></body></html>`;
+    res.setHeader('Content-Disposition', `attachment; filename="${gameTitle.replace(/[^a-zA-Z0-9 ]/g, '')}.html"`);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(fallbackHtml);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

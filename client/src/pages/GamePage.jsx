@@ -89,7 +89,6 @@ export default function GamePage() {
 
   const BuiltInComponent = builtInGames[game.builtInComponent];
   const isNebula = game.embedUrl?.startsWith('/nebula/');
-  const canDownload = game.embedUrl && (game.embedUrl.startsWith('/games/') || game.embedUrl.startsWith('/nebula/'));
 
   return (
     <div className="page game-page">
@@ -113,20 +112,18 @@ export default function GamePage() {
           />
         )}
         <FullscreenButton targetId="game-player" />
-        {canDownload && (
-          <a
-            href={`/api/games/${gameSlug}/download`}
-            className="btn-download"
-            title="Download Game"
-            download
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-          </a>
-        )}
+        <a
+          href={`/api/games/${gameSlug}/download`}
+          className="btn-download"
+          title="Download Game"
+          download
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </a>
       </div>
 
       {game.description && <p className="game-description">{game.description}</p>}
