@@ -53,32 +53,44 @@ function shuffle(arr, rng) {
   return a;
 }
 
+function pickGaps(rng, count, max) {
+  const positions = [];
+  for (let i = 0; i < count; i++) {
+    positions.push(Math.floor(rng() * max));
+  }
+  return positions;
+}
+
 function generateRoom(seed, hasExit, edges) {
   const rng = mulberry32(seed);
   const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
   for (let x = 0; x < COLS; x++) grid[ROWS - 1][x] = 1;
   if (edges.bottom) {
-    const g = 1 + Math.floor(rng() * (COLS - 2));
-    grid[ROWS - 1][g] = 0;
+    for (const gx of pickGaps(rng, 2, COLS - 2)) {
+      grid[ROWS - 1][1 + gx] = 0;
+    }
   }
 
   for (let x = 0; x < COLS; x++) grid[0][x] = 1;
   if (edges.top) {
-    const g = 1 + Math.floor(rng() * (COLS - 2));
-    grid[0][g] = 0;
+    for (const gx of pickGaps(rng, 2, COLS - 2)) {
+      grid[0][1 + gx] = 0;
+    }
   }
 
   for (let y = 0; y < ROWS; y++) grid[y][0] = 1;
   if (edges.left) {
-    const g = 1 + Math.floor(rng() * (ROWS - 2));
-    grid[g][0] = 0;
+    for (const gy of pickGaps(rng, 2, ROWS - 2)) {
+      grid[1 + gy][0] = 0;
+    }
   }
 
   for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 1;
   if (edges.right) {
-    const g = 1 + Math.floor(rng() * (ROWS - 2));
-    grid[g][COLS - 1] = 0;
+    for (const gy of pickGaps(rng, 2, ROWS - 2)) {
+      grid[1 + gy][COLS - 1] = 0;
+    }
   }
 
   const platCount = Math.floor(rng() * 4) + 2;
@@ -284,11 +296,9 @@ export default function VoidMaze({ onScore }) {
             g.roomPos.x--;
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
-            p.x = W - TILE - 4;
+            p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4;
-          } else {
-            p.x = 0;
-          }
+          } else { p.x = 0; }
         } else if (p.x + PW > W + 8) {
           if (g.roomPos.x < g.cfg.roomsX - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
@@ -296,11 +306,9 @@ export default function VoidMaze({ onScore }) {
             g.roomPos.x++;
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
-            p.x = TILE + 4;
+            p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4;
-          } else {
-            p.x = W - PW;
-          }
+          } else { p.x = W - PW; }
         } else if (p.y < -8) {
           if (g.roomPos.y > 0) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
@@ -308,11 +316,9 @@ export default function VoidMaze({ onScore }) {
             g.roomPos.y--;
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
-            p.y = H - TILE - 4;
+            p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4;
-          } else {
-            p.y = 0;
-          }
+          } else { p.y = 0; }
         } else if (p.y > H + 8) {
           if (g.roomPos.y < g.cfg.roomsY - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
@@ -320,12 +326,9 @@ export default function VoidMaze({ onScore }) {
             g.roomPos.y++;
             const nk = `${g.roomPos.x},${g.roomPos.y}`;
             g.grid = g.rooms[nk][g.currentLayers[nk]];
-            p.y = TILE + 4;
+            p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4;
-          } else {
-            p.y = H - PH;
-            p.vy = 0;
-          }
+          } else { p.y = H - PH; p.vy = 0; }
         }
 
         const px = Math.floor((p.x + PW / 2) / TILE);
