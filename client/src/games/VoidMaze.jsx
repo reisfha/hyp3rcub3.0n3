@@ -53,44 +53,28 @@ function shuffle(arr, rng) {
   return a;
 }
 
-function pickGaps(rng, count, max) {
-  const positions = [];
-  for (let i = 0; i < count; i++) {
-    positions.push(Math.floor(rng() * max));
-  }
-  return positions;
-}
-
 function generateRoom(seed, hasExit, edges) {
   const rng = mulberry32(seed);
   const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
   for (let x = 0; x < COLS; x++) grid[ROWS - 1][x] = 1;
   if (edges.bottom) {
-    for (const gx of pickGaps(rng, 2, COLS - 2)) {
-      grid[ROWS - 1][1 + gx] = 0;
-    }
+    for (let x = 1; x < COLS - 1; x++) if (rng() < 0.7) grid[ROWS - 1][x] = 1;
   }
 
   for (let x = 0; x < COLS; x++) grid[0][x] = 1;
   if (edges.top) {
-    for (const gx of pickGaps(rng, 2, COLS - 2)) {
-      grid[0][1 + gx] = 0;
-    }
+    for (let x = 1; x < COLS - 1; x++) if (rng() < 0.7) grid[0][x] = 1;
   }
 
   for (let y = 0; y < ROWS; y++) grid[y][0] = 1;
   if (edges.left) {
-    for (const gy of pickGaps(rng, 2, ROWS - 2)) {
-      grid[1 + gy][0] = 0;
-    }
+    for (let y = 0; y < ROWS; y++) if (rng() < 0.5) grid[y][0] = 1;
   }
 
   for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 1;
   if (edges.right) {
-    for (const gy of pickGaps(rng, 2, ROWS - 2)) {
-      grid[1 + gy][COLS - 1] = 0;
-    }
+    for (let y = 0; y < ROWS; y++) if (rng() < 0.5) grid[y][COLS - 1] = 1;
   }
 
   const platCount = Math.floor(rng() * 4) + 2;
