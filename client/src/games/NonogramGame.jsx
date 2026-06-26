@@ -1,21 +1,52 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+function clueCount(arr) {
+  let c = 0, inRun = false;
+  for (const v of arr) { if (v && !inRun) { c++; inRun = true; } else if (!v) inRun = false; }
+  return c;
+}
+
+function squeeze(arr, max) {
+  while (clueCount(arr) > max) {
+    let best = -1, bestLen = Infinity, inGap = false, start = 0;
+    for (let i = 0; i <= arr.length; i++) {
+      if (i < arr.length && !arr[i] && i > 0 && arr[i - 1] && !inGap) { inGap = true; start = i; }
+      else if ((i === arr.length || arr[i]) && inGap && i < arr.length && arr[i]) {
+        const len = i - start;
+        if (len < bestLen) { bestLen = len; best = start; }
+        inGap = false;
+      }
+    }
+    if (best < 0) break;
+    for (let i = best; i < best + bestLen; i++) arr[i] = 1;
+  }
+}
+
 function generateGrid(size) {
   const d = size <= 5 ? 0.4 : size <= 10 ? 0.35 : size <= 15 ? 0.3 : size <= 20 ? 0.28 : 0.25;
+  const maxC = size <= 10 ? 3 : 99;
   const g = Array.from({ length: size }, () => Array(size).fill(0));
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
       g[r][c] = Math.random() < d ? 1 : 0;
   for (let r = 0; r < size; r++) {
     const f = g[r].filter(v => v).length;
-    if (f === 0) g[r][Math.random() * size | 0] = 1;
+    if (!f) g[r][Math.random() * size | 0] = 1;
     if (f === size) g[r][Math.random() * size | 0] = 0;
   }
   for (let c = 0; c < size; c++) {
     let f = 0;
     for (let r = 0; r < size; r++) f += g[r][c];
-    if (f === 0) g[Math.random() * size | 0][c] = 1;
+    if (!f) g[Math.random() * size | 0][c] = 1;
     if (f === size) g[Math.random() * size | 0][c] = 0;
+  }
+  if (maxC < 99) {
+    for (let r = 0; r < size; r++) squeeze(g[r], maxC);
+    for (let c = 0; c < size; c++) {
+      const col = g.map(row => row[c]);
+      squeeze(col, maxC);
+      for (let r = 0; r < size; r++) g[r][c] = col[r];
+    }
   }
   return g;
 }
