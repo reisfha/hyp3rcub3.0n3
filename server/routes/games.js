@@ -1,6 +1,6 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 const Game = require('../models/Game');
 const User = require('../models/User');
 const Rating = require('../models/Rating');
@@ -128,6 +128,40 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
+router.get('/:slug/download', async (req, res) => {
+  try {
+    const game = await Game.findOne({ slug: req.params.slug });
+    if (!game) return res.status(404).json({ error: 'Game not found' });
+
+    const embedUrl = game.embedUrl;
+    if (!embedUrl) return res.status(400).json({ error: 'No download available for this game' });
+
+    const filename = path.basename(embedUrl);
+
+    if (embedUrl.startsWith('/games/')) {
+      const filePath = path.join(__dirname, '../../client/public', embedUrl);
+      if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.sendFile(filePath);
+    }
+
+    if (embedUrl.startsWith('/nebula/')) {
+      const cdnPath = embedUrl.replace('/nebula/', '');
+      const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${cdnPath}`;
+      const r = await fetch(cdnUrl);
+      if (!r.ok) return res.status(404).json({ error: 'File not found on CDN' });
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', r.headers.get('content-type') || 'application/octet-stream');
+      const buf = await r.arrayBuffer();
+      return res.send(Buffer.from(buf));
+    }
+
+    return res.status(400).json({ error: 'No download available for this game' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/:id/rate', isAuthenticated, async (req, res) => {
   try {
     const { score } = req.body;
@@ -199,44 +233,6 @@ router.post('/:id/scores', isAuthenticated, async (req, res) => {
       createdAt: new Date().toISOString()
     });
     res.json({ score });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/:slug/download', async (req, res) => {
-  try {
-    const game = await Game.findOne({ slug: req.params.slug });
-    if (!game) return res.status(404).json({ error: 'Game not found' });
-
-    const { embedUrl, title } = game;
-    if (!embedUrl) {
-      return res.status(400).json({ error: 'This game cannot be downloaded' });
-    }
-
-    const safeName = title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
-
-    if (embedUrl.startsWith('/games/')) {
-      const filePath = path.join(__dirname, '../../client/public', embedUrl);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: 'File not found' });
-      }
-      return res.download(filePath, `${safeName}.html`);
-    }
-
-    if (embedUrl.startsWith('/nebula/')) {
-      const cdnPath = embedUrl.replace('/nebula/', '');
-      const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${cdnPath}`;
-      const r = await fetch(cdnUrl);
-      if (!r.ok) return res.status(404).json({ error: 'File not found on CDN' });
-      const contentType = cdnPath.endsWith('.html') ? 'text/html; charset=utf-8' : r.headers.get('content-type') || 'application/octet-stream';
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${safeName}.html"`);
-      const buf = await r.arrayBuffer();
-      return res.send(Buffer.from(buf));
-    }
-
-    return res.status(400).json({ error: 'Cannot download external games' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

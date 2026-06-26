@@ -69,12 +69,12 @@ function generateRoom(seed, hasExit, edges) {
 
   for (let y = 0; y < ROWS; y++) grid[y][0] = 1;
   if (edges.left) {
-    for (let y = 0; y < ROWS; y++) if (rng() < 0.5) grid[y][0] = 1;
+    for (let y = 0; y < ROWS; y++) grid[y][0] = 0;
   }
 
   for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 1;
   if (edges.right) {
-    for (let y = 0; y < ROWS; y++) if (rng() < 0.5) grid[y][COLS - 1] = 1;
+    for (let y = 0; y < ROWS; y++) grid[y][COLS - 1] = 0;
   }
 
   const platCount = Math.floor(rng() * 4) + 2;
@@ -126,7 +126,9 @@ function generateLevel(cfg) {
       for (let l = 0; l < cfg.layers; l++) {
         const layerSeed = cfg.seed * 1000 + rx * 100 + ry * 10 + l;
         const hasExit = rx === exitPos.x && ry === exitPos.y && l === exitLayer;
-        rooms[key].push(generateRoom(layerSeed, hasExit, edges));
+        const room = generateRoom(layerSeed, hasExit, edges);
+        room[ROWS - 1][2] = 1;
+        rooms[key].push(room);
       }
     }
   }
@@ -173,7 +175,6 @@ export default function VoidMaze({ onScore }) {
     const world = generateLevel(cfg);
     const key = '0,0';
     const grid = world.rooms[key][0];
-    grid[ROWS - 1][2] = 1;
     gRef.current = {
       ...world,
       level: lvl,
@@ -255,7 +256,7 @@ export default function VoidMaze({ onScore }) {
         let ny = p.y + p.vy;
         let exited = false;
 
-        if (nx < -8) {
+        if (nx < 0) {
           if (g.roomPos.x > 0) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -265,7 +266,7 @@ export default function VoidMaze({ onScore }) {
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4; exited = true;
           } else { nx = 0; }
-        } else if (nx + PW > W + 8) {
+        } else if (nx + PW > W) {
           if (g.roomPos.x < g.cfg.roomsX - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -275,7 +276,7 @@ export default function VoidMaze({ onScore }) {
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4; exited = true;
           } else { nx = W - PW; }
-        } else if (ny < -8) {
+        } else if (ny < 0) {
           if (g.roomPos.y > 0) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;
@@ -285,7 +286,7 @@ export default function VoidMaze({ onScore }) {
             p.x = TILE * 2; p.y = (ROWS - 1) * TILE - PH; p.vy = 0; g.grounded = true;
             g.flashTimer = 4; exited = true;
           } else { ny = 0; }
-        } else if (ny + PH > H + 8) {
+        } else if (ny + PH > H) {
           if (g.roomPos.y < g.cfg.roomsY - 1) {
             const oldKey = `${g.roomPos.x},${g.roomPos.y}`;
             g.currentLayers[oldKey] = (g.currentLayers[oldKey] + 1) % g.cfg.layers;

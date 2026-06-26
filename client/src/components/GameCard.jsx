@@ -50,19 +50,6 @@ export default function GameCard({ game, onFavoriteToggle }) {
             {faved ? '★' : '☆'}
           </button>
         )}
-        {(game.embedUrl?.startsWith('/games/') || game.embedUrl?.startsWith('/nebula/')) && (
-          <button
-            className="game-card-download"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              window.open(`/api/games/${game.slug}/download`, '_blank');
-            }}
-            title="Download game"
-          >
-            ⬇
-          </button>
-        )}
       </div>
       <div className="game-card-info">
         <h3>{game.title}</h3>

@@ -168,13 +168,6 @@ a:hover { text-shadow: var(--glow-cyan); }
   align-items: center; justify-content: center; transition: all 0.2s;
 }
 .game-card-fav.faved { color: var(--yellow); text-shadow: 0 0 10px var(--yellow); }
-.game-card-download {
-  position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7);
-  border: 1px solid var(--border); color: var(--text-dim); font-size: 16px; cursor: pointer;
-  width: 30px; height: 30px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; transition: all 0.2s; z-index: 2;
-}
-.game-card-download:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.3); }
 .game-card-info { padding: 12px; }
 .game-card-info h3 { font-family: var(--font-display); font-size: 13px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .game-card-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); }
@@ -246,6 +239,14 @@ a:hover { text-shadow: var(--glow-cyan); }
 }
 .btn-fullscreen:hover { border-color: var(--cyan); color: var(--cyan); }
 .btn-fullscreen svg { width: 20px; height: 20px; }
+
+.btn-download {
+  position: absolute; bottom: 10px; right: 52px; z-index: 10;
+  background: rgba(0,0,0,0.7); border: 1px solid var(--border); color: var(--text);
+  padding: 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: flex;
+}
+.btn-download:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn-download svg { width: 20px; height: 20px; }
 
 .game-description { margin-top: 16px; color: var(--text-dim); line-height: 1.6; }
 .game-instructions {
@@ -525,14 +526,6 @@ a:hover { text-shadow: var(--glow-cyan); }
 .btn-report { background: transparent; border: 1px solid var(--text-dim); color: var(--text-dim); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
 .btn-report:hover { border-color: var(--magenta); color: var(--magenta); }
 .report-thanks { color: var(--cyan); font-size: 0.85rem; }
-.btn-download {
-  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
-  padding: 8px 20px; border-radius: 6px; border: 1px solid var(--cyan);
-  background: transparent; color: var(--cyan); font-family: var(--font-display);
-  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-  cursor: pointer; transition: all 0.3s; text-decoration: none;
-}
-.btn-download:hover { background: var(--cyan); color: #000; box-shadow: var(--glow-cyan); }
 
 /* === Tag Filter === */
 .tag-filter {

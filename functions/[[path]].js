@@ -328,6 +328,48 @@ export async function onRequest(context) {
         }
       }
 
+      if (path.endsWith('/download')) {
+        const game = await db.prepare('SELECT * FROM games WHERE slug = ?').bind(slug).first();
+        if (!game) {
+          const nebulaReq = new Request(new URL('/games/games.json', url).toString());
+          const nebulaR = await env.ASSETS.fetch(nebulaReq);
+          const catalog = await nebulaR.json().catch(() => ({}));
+          const nebulaGame = (catalog.games || []).find(g => g.slug === slug);
+          if (nebulaGame && nebulaGame.file) {
+            const cdnUrl = `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${nebulaGame.file}`;
+            const r = await fetch(cdnUrl);
+            if (!r.ok) return json({ error: 'File not found on CDN' }, 404);
+            const filename = nebulaGame.file.split('/').pop() || 'game.html';
+            return new Response(r.body, {
+              headers: {
+                'Content-Type': r.headers.get('content-type') || 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${filename}"`
+              }
+            });
+          }
+          return json({ error: 'No download available for this game' }, 400);
+        }
+
+        const embedUrl = game.embed_url || '';
+        if (embedUrl.startsWith('/games/') || embedUrl.startsWith('/nebula/')) {
+          const filename = embedUrl.split('/').pop() || 'game.html';
+          const fileUrl = embedUrl.startsWith('/games/')
+            ? new URL(embedUrl, url).toString()
+            : `https://cdn.jsdelivr.net/gh/GoatTech-42/NEBULA-CDN@main/${embedUrl.replace('/nebula/', '')}`;
+
+          const r = await fetch(fileUrl);
+          if (!r.ok) return json({ error: 'File not found' }, 404);
+          return new Response(r.body, {
+            headers: {
+              'Content-Type': r.headers.get('content-type') || 'application/octet-stream',
+              'Content-Disposition': `attachment; filename="${filename}"`
+            }
+          });
+        }
+
+        return json({ error: 'No download available for this game' }, 400);
+      }
+
       const game = await db.prepare('SELECT * FROM games WHERE slug = ?').bind(slug).first();
       if (!game) {
         const nebulaReq = new Request(new URL('/games/games.json', url).toString());

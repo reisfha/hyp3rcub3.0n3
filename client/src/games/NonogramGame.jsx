@@ -1,61 +1,26 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-function clueCount(arr) {
-  let c = 0, inRun = false;
-  for (const v of arr) { if (v && !inRun) { c++; inRun = true; } else if (!v) inRun = false; }
-  return c;
-}
-
-function squeeze(arr, max) {
-  while (true) {
-    const runs = [];
-    let inRun = false, start = 0;
-    for (let i = 0; i <= arr.length; i++) {
-      if (i < arr.length && arr[i] && !inRun) { inRun = true; start = i; }
-      else if ((i === arr.length || !arr[i]) && inRun) { runs.push([start, i - 1]); inRun = false; }
-    }
-    if (runs.length <= max) break;
-    let best = 0, bestDist = Infinity;
-    for (let i = 0; i < runs.length - 1; i++) {
-      const dist = runs[i + 1][0] - runs[i][1] - 1;
-      if (dist < bestDist) { bestDist = dist; best = i; }
-    }
-    for (let i = runs[best][1] + 1; i < runs[best + 1][0]; i++) arr[i] = 1;
-  }
-}
-
 function generateGrid(size) {
   const d = size <= 5 ? 0.4 : size <= 10 ? 0.35 : size <= 15 ? 0.3 : size <= 20 ? 0.28 : 0.25;
-  const maxC = size <= 10 ? 3 : 99;
   const g = Array.from({ length: size }, () => Array(size).fill(0));
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++)
       g[r][c] = Math.random() < d ? 1 : 0;
   for (let r = 0; r < size; r++) {
     const f = g[r].filter(v => v).length;
-    if (!f) g[r][Math.random() * size | 0] = 1;
+    if (f === 0) g[r][Math.random() * size | 0] = 1;
     if (f === size) g[r][Math.random() * size | 0] = 0;
   }
   for (let c = 0; c < size; c++) {
     let f = 0;
     for (let r = 0; r < size; r++) f += g[r][c];
-    if (!f) g[Math.random() * size | 0][c] = 1;
+    if (f === 0) g[Math.random() * size | 0][c] = 1;
     if (f === size) g[Math.random() * size | 0][c] = 0;
   }
-  if (maxC < 99) {
-    let dirty = true;
-    while (dirty) {
-      dirty = false;
-      for (let r = 0; r < size; r++) { const b = clueCount(g[r]); squeeze(g[r], maxC); if (clueCount(g[r]) !== b) dirty = true; }
-      for (let c = 0; c < size; c++) {
-        const col = g.map(row => row[c]);
-        const b = clueCount(col);
-        squeeze(col, maxC);
-        if (clueCount(col) !== b) dirty = true;
-        for (let r = 0; r < size; r++) g[r][c] = col[r];
-      }
-    }
-  }
+  const bigRow = Math.random() * size | 0;
+  const bigLen = Math.floor(size * (0.55 + Math.random() * 0.3));
+  const bigStart = Math.random() * (size - bigLen) | 0;
+  for (let c = bigStart; c < bigStart + bigLen; c++) g[bigRow][c] = 1;
   return g;
 }
 
@@ -162,23 +127,15 @@ export default function NonogramGame({ onScore }) {
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const filled = grid.flat().filter(c => c === 1).length;
 
-  const sizePresets = [5, 10, 15, 20, 25];
-
   return (
     <div className="builtin-game" style={{ userSelect: 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 13, color: '#aaa' }}>Size:</span>
-        {sizePresets.map(s => (
-          <button key={s}
-            onClick={() => handleSizeChange(s)}
-            className="btn-primary"
-            style={{
-              padding: '2px 8px', fontSize: 12,
-              background: s === size ? '#3388ee' : undefined
-            }}
-          >{s}×{s}</button>
-        ))}
-        <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12, marginLeft: 4 }}
+        <input type="range" min="5" max="25" value={size}
+          onChange={e => handleSizeChange(Number(e.target.value))}
+          style={{ width: 100, accentColor: '#3388ee' }} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#eee', minWidth: 50 }}>{size}×{size}</span>
+        <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
           onClick={() => newPuzzle(size)}>🎲 New</button>
         <button className="btn-primary" style={{ padding: '2px 10px', fontSize: 12 }}
           onClick={() => {
